@@ -21,7 +21,7 @@ and import them into a database.
 1. Create a schema like this: `mysql -p -e 'CREATE SCHEMA IF NOT EXISTS mri'`;
 2. Create/Upgrade the schema: `alembic upgrade head`.
 
-Note: You can destroy the database like this: `mysql -p -e 'drop schema mri'`.
+Note: You can destroy the database like this: `mysql -p -e 'DROP SCHEMA mri'`.
 
 ### Import from DICOM
 
@@ -59,3 +59,11 @@ To extract data from a spreadsheet formatted like | PR***** | ... |,
 run: `python3.5 extract-more.py <file> <sheet> <db> -i <csv>`
 where <csv> is a file containing | PR***** | anonym_ID |. You can generate such a file using the 
 [anonymizer](http://hbps1.intranet.chuv:7000/LREN/anonymizer) project.
+
+## Usage example
+
+You can customize the three following scripts to avoid typing too much commands:
+
+* db_init.sh - Clear and recreate the database;
+* extract.sh - Extract data from dcm, nii and xls;
+* run.sh - Run db_init.sh and extract.sh
