@@ -47,9 +47,10 @@ def main():
     sequence_class = db["sequence_class"]
     repetition_class = db["repetition_class"]
 
+    logging.info("processing files... (This can take a few minutes)")
     for file_path in glob.iglob(args.root_folder + '/**/*.nii', recursive=True):
         file_path = path.abspath(file_path)
-        logging.info('processing: %s', file_path)
+        logging.debug('processing: %s', file_path)
 
         try:
             pr_id = re.findall('/([^/]+?)/[^/]+?/[^/]+?/[^/]+?/[^/]+?\.nii', file_path)[0]
