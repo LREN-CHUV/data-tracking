@@ -5,7 +5,7 @@ and import them into a database.
 
 ## What does it require ?
 
-* [Python2.7](https://www.python.org/);
+* [Python3.5](https://www.python.org/);
 * [pydicom](http://pydicom.readthedocs.org/en/latest/getting_started.html);
 * [SQLAlchemy](http://www.sqlalchemy.org/);
 * [Alembic](http://alembic.readthedocs.io/en/latest/);
