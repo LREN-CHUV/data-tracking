@@ -6,7 +6,8 @@
 ########################################################################################################################
 
 import argparse
-import glob
+import os
+import fnmatch
 import dicom
 import datetime
 import csv
@@ -51,25 +52,27 @@ def main():
     sequence_class = db["sequence_class"]
     repetition_class = db["repetition_class"]
 
-    for filename in glob.iglob(args.root + '/**/MR.*', recursive=True):
-        try:
-            logging.info("Processing '%s'" % filename)
-            ds = dicom.read_file(filename)
+    for root, dirnames, filenames in os.walk(args.root):
+        for file in fnmatch.filter(filenames, 'MR.*'):
+            try:
+                filename = root+"/"+file
+                logging.info("Processing '%s'" % filename)
+                ds = dicom.read_file(filename)
 
-            participant_id = extract_participant(participant_class, ds, db_session, DEFAULT_HANDEDNESS, args.id)
-            scan_id = extract_scan(scan_class, ds, db_session, participant_id, DEFAULT_ROLE, DEFAULT_COMMENT)
-            session_id = extract_session(session_class, ds, db_session, scan_id)
-            sequence_type_id = extract_sequence_type(sequence_type_class, ds, db_session)
-            sequence_id = extract_sequence(sequence_class, db_session, session_id, sequence_type_id)
-            repetition_id = extract_repetition(repetition_class, ds, db_session, sequence_id)
-            extract_dicom(dicom_class, db_session, filename, repetition_id)
+                participant_id = extract_participant(participant_class, ds, db_session, DEFAULT_HANDEDNESS, args.id)
+                scan_id = extract_scan(scan_class, ds, db_session, participant_id, DEFAULT_ROLE, DEFAULT_COMMENT)
+                session_id = extract_session(session_class, ds, db_session, scan_id)
+                sequence_type_id = extract_sequence_type(sequence_type_class, ds, db_session)
+                sequence_id = extract_sequence(sequence_class, db_session, session_id, sequence_type_id)
+                repetition_id = extract_repetition(repetition_class, ds, db_session, sequence_id)
+                extract_dicom(dicom_class, db_session, filename, repetition_id)
 
-        except (InvalidDicomError, IsADirectoryError):
-            logging.warning("%s is not a DICOM file !" % filename)
+            except (InvalidDicomError):
+                logging.warning("%s is not a DICOM file !" % filename)
 
-        except (err.IntegrityError, exc.IntegrityError):
-            print_db_except()
-            db_session.rollback()
+            except (err.IntegrityError, exc.IntegrityError):
+                print_db_except()
+                db_session.rollback()
 
     logging.info("[DONE]")
 
