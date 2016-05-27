@@ -7,7 +7,7 @@ from sqlalchemy import engine_from_config, pool
 
 import sys
 import os
-sys.path.append(os.getcwd())
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')))
 from model import Base
 
 
