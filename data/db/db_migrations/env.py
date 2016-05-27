@@ -1,13 +1,19 @@
 from __future__ import with_statement
 
-from logging.config import fileConfig
-
-from alembic import context
-from sqlalchemy import engine_from_config, pool
-
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')))
+
+from logging.config import fileConfig
+
+from sqlalchemy import engine_from_config, pool
+
+MRIDB_FOLDER = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+
+from alembic import context
+from alembic.config import Config
+alembic_cfg = Config(MRIDB_FOLDER+"/alembic.ini")
+
+sys.path.append(MRIDB_FOLDER)
 from model import Base
 
 
