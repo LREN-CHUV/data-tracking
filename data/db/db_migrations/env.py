@@ -11,15 +11,12 @@ MRIDB_FOLDER = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__f
 
 from alembic import context
 from alembic.config import Config
-alembic_cfg = Config(MRIDB_FOLDER+"/alembic.ini")
+# this is the Alembic Config object, which provides
+# access to the values within the .ini file in use.
+config = Config(MRIDB_FOLDER+"/alembic.ini")
 
 sys.path.append(MRIDB_FOLDER)
 from model import Base
-
-
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
-config = context.config
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
