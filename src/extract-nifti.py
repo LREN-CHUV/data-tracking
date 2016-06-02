@@ -7,8 +7,7 @@
 
 import logging
 import argparse
-import os
-import fnmatch
+import glob
 import re
 import csv
 
@@ -49,62 +48,60 @@ def main():
     repetition_class = db["repetition_class"]
 
     logging.info("processing files... (This can take a few minutes)")
-    for root, dirnames, filenames in os.walk(args.root_folder):
-        for file in fnmatch.filter(filenames, '*.nii'):
-            file_path = root+"/"+file
-            file_path = path.abspath(file_path)
-            logging.debug('processing: %s', file_path)
+    for file_path in glob.iglob(args.root_folder + '/**/*.nii', recursive=True):
+        file_path = path.abspath(file_path)
+        logging.debug('processing: %s', file_path)
 
-            try:
-                pr_id = re.findall('/([^/]+?)/[^/]+?/[^/]+?/[^/]+?/[^/]+?\.nii', file_path)[0]
-                session = int(re.findall('/([^/]+?)/[^/]+?/[^/]+?/[^/]+?\.nii', file_path)[0])
-                sequence = re.findall('/([^/]+?)/[^/]+?/[^/]+?\.nii', file_path)[0]
-                repetition = int(re.findall('/([^/]+?)/[^/]+?\.nii', file_path)[0])
+        try:
+            pr_id = re.findall('/([^/]+?)/[^/]+?/[^/]+?/[^/]+?/[^/]+?\.nii', file_path)[0]
+            session = int(re.findall('/([^/]+?)/[^/]+?/[^/]+?/[^/]+?\.nii', file_path)[0])
+            sequence = re.findall('/([^/]+?)/[^/]+?/[^/]+?\.nii', file_path)[0]
+            repetition = int(re.findall('/([^/]+?)/[^/]+?\.nii', file_path)[0])
 
-                participant_id = None
-                scan_date = None
+            participant_id = None
+            scan_date = None
 
-                with open(args.csv, 'r') as f:
-                    csv_reader = csv.reader(f)
-                    for row in csv_reader:
-                        if row[0] == pr_id:
-                            participant_id = row[1]
-                            scan_date = date_from_str(row[2])
+            with open(args.csv, 'r') as f:
+                csv_reader = csv.reader(f)
+                for row in csv_reader:
+                    if row[0] == pr_id:
+                        participant_id = row[1]
+                        scan_date = date_from_str(row[2])
 
-                if participant_id and scan_date:
+            if participant_id and scan_date:
 
-                    filename = re.findall('/([^/]+?)\.nii', file_path)[0]
+                filename = re.findall('/([^/]+?)\.nii', file_path)[0]
 
-                    try:
-                        prefix_type = re.findall('(.*)PR', filename)[0]
-                    except IndexError:
-                        prefix_type = "unknown"
+                try:
+                    prefix_type = re.findall('(.*)PR', filename)[0]
+                except IndexError:
+                    prefix_type = "unknown"
 
-                    try:
-                        postfix_type = re.findall('-\d\d_(.+)', filename)[0]
-                    except IndexError:
-                        postfix_type = "unknown"
+                try:
+                    postfix_type = re.findall('-\d\d_(.+)', filename)[0]
+                except IndexError:
+                    postfix_type = "unknown"
 
-                    save_nifti_meta(
-                        db_session,
-                        scan_class,
-                        nifti_class,
-                        session_class,
-                        sequence_type_class,
-                        sequence_class,
-                        repetition_class,
-                        participant_id,
-                        scan_date,
-                        session,
-                        sequence,
-                        repetition,
-                        prefix_type,
-                        postfix_type,
-                        file_path
-                    )
+                save_nifti_meta(
+                    db_session,
+                    scan_class,
+                    nifti_class,
+                    session_class,
+                    sequence_type_class,
+                    sequence_class,
+                    repetition_class,
+                    participant_id,
+                    scan_date,
+                    session,
+                    sequence,
+                    repetition,
+                    prefix_type,
+                    postfix_type,
+                    file_path
+                )
 
-            except ValueError:
-                logging.warning("A problem occurred with '%s' ! Check the path format... " % file_path)
+        except ValueError:
+            logging.warning("A problem occurred with '%s' ! Check the path format... " % file_path)
 
     logging.info('[FINISH]')
 
