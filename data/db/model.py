@@ -129,10 +129,10 @@ class SequenceType(Base):
     __tablename__ = 'sequence_type'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(45), nullable=False)
-    manufacturer = Column(String(45), nullable=False)
-    manufacturer_model_name = Column(String(45), nullable=False)
-    institution_name = Column(String(45), nullable=False)
+    name = Column(String(255), nullable=False)
+    manufacturer = Column(String(255), nullable=False)
+    manufacturer_model_name = Column(String(255), nullable=False)
+    institution_name = Column(String(255), nullable=False)
     slice_thickness = Column(Float, nullable=False)
     repetition_time = Column(Float, nullable=False)
     echo_time = Column(Float, nullable=False)
