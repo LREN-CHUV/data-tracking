@@ -9,8 +9,8 @@ and import them into a database.
 * [pydicom](http://pydicom.readthedocs.org/en/latest/getting_started.html);
 * [SQLAlchemy](http://www.sqlalchemy.org/);
 * [Alembic](http://alembic.readthedocs.io/en/latest/);
-* [MySQL](http://www.mysql.com/);
-* [PyMySQL](https://github.com/PyMySQL/PyMySQL).
+* [PostgreSQL](https://www.postgresql.org/);
+* [Psycopg2](https://pypi.python.org/pypi/psycopg2).
 
 ## How does it work ?
 
@@ -18,10 +18,7 @@ and import them into a database.
 
 (You need to `cd data/db/` and configure alembic prior to run it. See: alembic.ini.)
 
-1. Create a schema like this: `mysql -p -e 'CREATE SCHEMA IF NOT EXISTS mri'`;
-2. Create/Upgrade the schema: `alembic upgrade head`.
-
-Note: You can destroy the database like this: `mysql -p -e 'DROP SCHEMA mri'`.
+Create/Upgrade the schema: `alembic upgrade head`.
 
 ### Import from DICOM
 
