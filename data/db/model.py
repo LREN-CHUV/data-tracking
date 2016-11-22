@@ -12,8 +12,8 @@ class Check(Base):
     __tablename__ = 'check'
 
     id = Column(Integer, primary_key=True, nullable=False)
-    quality_check_id = Column(ForeignKey('quality_check.id'), primary_key=True, nullable=False, index=True)
-    nifti_id = Column(ForeignKey('nifti.id'), primary_key=True, nullable=False, index=True)
+    quality_check_id = Column(ForeignKey('quality_check.id'), nullable=False, index=True)
+    nifti_id = Column(ForeignKey('nifti.id'), nullable=False, index=True)
     value = Column(Float, nullable=False)
 
     nifti = relationship('Nifti')
@@ -24,7 +24,7 @@ class Dicom(Base):
     __tablename__ = 'dicom'
 
     id = Column(Integer, primary_key=True, nullable=False)
-    repetition_id = Column(ForeignKey('repetition.id'), primary_key=True, nullable=False, index=True)
+    repetition_id = Column(ForeignKey('repetition.id'), nullable=False, index=True)
     path = Column(Text, nullable=False)
 
     repetition = relationship('Repetition')
@@ -34,7 +34,7 @@ class Nifti(Base):
     __tablename__ = 'nifti'
 
     id = Column(Integer, primary_key=True, nullable=False)
-    repetition_id = Column(ForeignKey('repetition.id'), primary_key=True, nullable=False, index=True)
+    repetition_id = Column(ForeignKey('repetition.id'), nullable=False, index=True)
     path = Column(Text, nullable=False)
     result_type = Column(String(255), nullable=False)
     output_type = Column(String(255), nullable=False)
@@ -46,8 +46,8 @@ class Participant(Base):
     __tablename__ = 'participant'
 
     id = Column(String(255), primary_key=True)
-    gender = Column(Enum('male', 'female', 'other', 'unknown'), nullable=False)
-    handedness = Column(Enum('left', 'right', 'ambidexter', 'unknown'), nullable=False)
+    gender = Column(Enum('male', 'female', 'other', 'unknown', name='gender'), nullable=False)
+    handedness = Column(Enum('left', 'right', 'ambidexter', 'unknown', name='handedness'), nullable=False)
     birthdate = Column(Date, nullable=False)
 
 
@@ -67,7 +67,7 @@ class QualityCheck(Base):
     __tablename__ = 'quality_check'
 
     id = Column(Integer, primary_key=True, nullable=False)
-    scientist_id = Column(ForeignKey('researcher.id'), primary_key=True, nullable=False, index=True)
+    scientist_id = Column(ForeignKey('researcher.id'), nullable=False, index=True)
 
     scientist = relationship('Researcher')
 
@@ -76,7 +76,7 @@ class Repetition(Base):
     __tablename__ = 'repetition'
 
     id = Column(Integer, primary_key=True, nullable=False)
-    sequence_id = Column(ForeignKey('sequence.id'), primary_key=True, nullable=False, index=True)
+    sequence_id = Column(ForeignKey('sequence.id'), nullable=False, index=True)
     value = Column(Integer, nullable=False)
 
     sequence = relationship('Sequence')
@@ -86,7 +86,7 @@ class Researcher(Base):
     __tablename__ = 'researcher'
 
     id = Column(Integer, primary_key=True, nullable=False)
-    email = Column(String(255), primary_key=True, nullable=False)
+    email = Column(String(255), nullable=False)
     firstname = Column(String(255), nullable=False)
     lastname = Column(String(255), nullable=False)
 
@@ -96,7 +96,7 @@ class Responsible(Base):
 
     scientist_id = Column(ForeignKey('researcher.id'), primary_key=True, nullable=False, index=True)
     scan_id = Column(ForeignKey('scan.id'), primary_key=True, nullable=False, index=True)
-    role = Column(Enum('technician', 'supervisor'), nullable=False)
+    role = Column(Enum('technician', 'supervisor', name='responsible_role'), nullable=False)
 
     scan = relationship('Scan')
     scientist = relationship('Researcher')
@@ -107,7 +107,7 @@ class Scan(Base):
 
     id = Column(Integer, primary_key=True)
     date = Column(Date, nullable=False)
-    role = Column(Enum('C', 'P', 'IC', 'U'), nullable=False)
+    role = Column(Enum('C', 'P', 'IC', 'U', name='scan_role'), nullable=False)
     comment = Column(Text, nullable=False)
     participant_id = Column(ForeignKey('participant.id'), nullable=False, index=True)
 
@@ -118,8 +118,8 @@ class Sequence(Base):
     __tablename__ = 'sequence'
 
     id = Column(Integer, primary_key=True, nullable=False)
-    session_id = Column(ForeignKey('session.id'), primary_key=True, nullable=False, index=True)
-    sequence_type_id = Column(ForeignKey('sequence_type.id'), primary_key=True, nullable=False, index=True)
+    session_id = Column(ForeignKey('session.id'), nullable=False, index=True)
+    sequence_type_id = Column(ForeignKey('sequence_type.id'), nullable=False, index=True)
 
     sequence_type = relationship('SequenceType')
     session = relationship('Session')
@@ -155,7 +155,7 @@ class Session(Base):
     __tablename__ = 'session'
 
     id = Column(Integer, primary_key=True, nullable=False)
-    scan_id = Column(ForeignKey('scan.id'), primary_key=True, nullable=False, index=True)
+    scan_id = Column(ForeignKey('scan.id'), nullable=False, index=True)
     value = Column(Integer, nullable=False)
 
     scan = relationship('Scan')
