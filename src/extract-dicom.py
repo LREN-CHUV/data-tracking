@@ -139,13 +139,9 @@ def read_anonym_id(id_file, old_id):
     try:
         with open(id_file, 'r') as f:
             csv_reader = csv.reader(f)
-            for row in csv_reader:
-                if row[0] == old_id:
-                    return row[1]
+            return next((row[1] for row in csv_reader if row[0] == old_id), None)
     except FileNotFoundError:
         logging.warning("ID file not found !")
-
-    return None
 
 
 ########################################################################################################################
@@ -287,18 +283,18 @@ def extract_sequence_type(sequence_type_class, ds, db_session):
         echo_train_length=echo_train_length
     ).all()
 
-    for s in sequence_type_list:
-        if str(s.slice_thickness) != str(slice_thickness) \
-                or str(s.repetition_time) != str(repetition_time)\
-                or str(s.echo_time) != str(echo_time)\
-                or str(s.percent_phase_field_of_view) != str(percent_phase_field_of_view)\
-                or str(s.flip_angle) != str(flip_angle)\
-                or str(s.magnetic_field_strength) != str(magnetic_field_strength)\
-                or str(s.flip_angle) != str(flip_angle)\
-                or str(s.percent_sampling) != str(percent_sampling)\
-                or str(s.pixel_spacing_0) != str(pixel_spacing_0)\
-                or str(s.pixel_spacing_1) != str(pixel_spacing_1):
-            sequence_type_list.remove(s)
+    sequence_type_list = list(filter(lambda s: not (
+        s.slice_thickness != str(slice_thickness)
+        or str(s.repetition_time) != str(repetition_time)
+        or str(s.echo_time) != str(echo_time)
+        or str(s.percent_phase_field_of_view) != str(percent_phase_field_of_view)
+        or str(s.flip_angle) != str(flip_angle)
+        or str(s.magnetic_field_strength) != str(magnetic_field_strength)
+        or str(s.flip_angle) != str(flip_angle)
+        or str(s.percent_sampling) != str(percent_sampling)
+        or str(s.pixel_spacing_0) != str(pixel_spacing_0)
+        or str(s.pixel_spacing_1) != str(pixel_spacing_1)
+        ), sequence_type_list))
 
     if len(sequence_type_list) > 0:
         sequence_type = sequence_type_list[0]
