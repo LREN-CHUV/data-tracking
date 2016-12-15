@@ -41,7 +41,7 @@ def main():
     args = parse_args()
 
     logging.debug("[START]")
-    start_time = time.time()
+    start_time = time.clock()
 
     logging.info("Connecting to DB")
     db = init_db(args.db)
@@ -56,6 +56,7 @@ def main():
 
     checked_folders = dict()
     count_files = 0
+
     for filename in glob.iglob(args.root + '/**/MR.*', recursive=True):
         try:
             logging.debug("Processing '%s'" % filename)
@@ -83,7 +84,7 @@ def main():
             print_db_except()
             db_session.rollback()
 
-    stop_time = time.time()
+    stop_time = time.clock()
     logging.debug("[DONE]")
 
     logging.info("Closing DB connection")
