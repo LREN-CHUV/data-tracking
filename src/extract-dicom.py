@@ -11,6 +11,8 @@ import dicom
 import datetime
 import csv
 import logging
+import os
+import time
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
@@ -38,7 +40,8 @@ def main():
     logging.basicConfig(level='INFO')
     args = parse_args()
 
-    logging.info("[START]")
+    logging.debug("[START]")
+    start_time = time.time()
 
     logging.info("Connecting to DB")
     db = init_db(args.db)
@@ -51,18 +54,27 @@ def main():
     sequence_class = db["sequence_class"]
     repetition_class = db["repetition_class"]
 
+    checked_folders = dict()
+    count_files = 0
     for filename in glob.iglob(args.root + '/**/MR.*', recursive=True):
         try:
-            logging.info("Processing '%s'" % filename)
-            ds = dicom.read_file(filename)
+            logging.debug("Processing '%s'" % filename)
+            count_files += 1
+            folder = os.path.split(filename)[0]
 
-            participant_id = extract_participant(participant_class, ds, db_session, DEFAULT_HANDEDNESS, args.id)
-            scan_id = extract_scan(scan_class, ds, db_session, participant_id, DEFAULT_ROLE, DEFAULT_COMMENT)
-            session_id = extract_session(session_class, ds, db_session, scan_id)
-            sequence_type_id = extract_sequence_type(sequence_type_class, ds, db_session)
-            sequence_id = extract_sequence(sequence_class, db_session, session_id, sequence_type_id)
-            repetition_id = extract_repetition(repetition_class, ds, db_session, sequence_id)
-            extract_dicom(dicom_class, db_session, filename, repetition_id)
+            if folder not in checked_folders:
+                logging.info("Extracting DICOM headers from '%s'" % filename)
+                ds = dicom.read_file(filename)
+
+                participant_id = extract_participant(participant_class, ds, db_session, DEFAULT_HANDEDNESS, args.id)
+                scan_id = extract_scan(scan_class, ds, db_session, participant_id, DEFAULT_ROLE, DEFAULT_COMMENT)
+                session_id = extract_session(session_class, ds, db_session, scan_id)
+                sequence_type_id = extract_sequence_type(sequence_type_class, ds, db_session)
+                sequence_id = extract_sequence(sequence_class, db_session, session_id, sequence_type_id)
+                repetition_id = extract_repetition(repetition_class, ds, db_session, sequence_id)
+
+                checked_folders[folder] = repetition_id
+            extract_dicom(dicom_class, db_session, filename, checked_folders[folder])
 
         except (InvalidDicomError, IsADirectoryError):
             logging.warning("%s is not a DICOM file !" % filename)
@@ -71,7 +83,14 @@ def main():
             print_db_except()
             db_session.rollback()
 
-    logging.info("[DONE]")
+    stop_time = time.time()
+    logging.debug("[DONE]")
+
+    logging.info("Closing DB connection")
+    db_session.close()
+
+    duration = stop_time - start_time
+    logging.debug("Processed %s files in %s" % (str(count_files), str(duration)))
 
 
 ########################################################################################################################

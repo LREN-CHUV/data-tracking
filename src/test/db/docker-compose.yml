@@ -1,0 +1,10 @@
+version: '2'
+services:
+  database:
+    image: postgres:9.5.3
+    ports:
+      - "65432:5432"
+    environment:
+      POSTGRES_USER: mri
+      POSTGRES_PASSWORD: test
+    network_mode: "bridge"

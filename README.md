@@ -16,7 +16,7 @@ and import them into a database.
 
 ### Deploy/Upgrade the database
 
-(You need to `cd data/db/` and configure alembic prior to run it. See: alembic.ini.)
+(You need to `cd data/db/` and configure alembic - create an 'alembic.ini' file - prior to run it.)
 
 Create/Upgrade the schema: `alembic upgrade head`.
 
