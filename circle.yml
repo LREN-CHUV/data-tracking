@@ -6,5 +6,5 @@ dependencies:
     - docker info
 test:
   override:
-    - cd ./mri-meta-extract/tests
+    - cd ./tests
     - ./test.sh
