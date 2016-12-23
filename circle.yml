@@ -6,6 +6,10 @@ machine:
 dependencies:
   pre:
     - pip install alembic
+    - pip install psycopg2
+    - pip install airflow
+    - pip install pydicom
+    - pip install sqlalchemy
   override:
     - docker info
 test:
