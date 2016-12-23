@@ -7,4 +7,5 @@ dependencies:
 test:
   override:
     - cd ./tests
+    - ls -la
     - ./test.sh
