@@ -9,29 +9,16 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='mri_meta_extract',
-
     version='1.0.0',
-
     url='https://github.com/LREN-CHUV/mri-meta-extract',
-
     description='Extract meta-data from DICOM and NIFTI files',
     long_description=long_description,
-
     author='Mirco Nasuti',
     author_email='mirco.nasuti@chuv.ch',
-
     license='Apache 2.0',
-
-    classifiers=[
-        'License :: OSI Approved :: Apache Software License',
-        'Programming Language :: Python3',
-    ],
-
     packages=['mri_meta_extract'],
-
     extras_require={
         'test': ['unittest'],
     },
-
     install_requires=['airflow', 'pydicom', 'sqlalchemy']
 )
