@@ -12,6 +12,8 @@ setup(
 
     version='1.0.0',
 
+    url='https://github.com/LREN-CHUV/mri-meta-extract',
+
     description='Extract meta-data from DICOM and NIFTI files',
     long_description=long_description,
 
