@@ -6,6 +6,4 @@ dependencies:
     - docker info
 test:
   override:
-    - cd ./tests
-    - ls -la
-    - ./test.sh
+    - cd ./tests && ./test.sh
