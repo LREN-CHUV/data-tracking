@@ -1,4 +1,4 @@
-|License|
+|License| |Codacy Badge| |CircleCI|
 
 MRI Meta-data Extractor
 =======================
@@ -43,3 +43,7 @@ You can use the following functions:
 
 .. |License| image:: https://img.shields.io/badge/license-Apache--2.0-blue.svg
    :target: https://github.com/LREN-CHUV/airflow-imaging-plugins/blob/master/LICENSE
+.. |Codacy Badge| image:: https://api.codacy.com/project/badge/Grade/4547fb5d1e464e4087640e046893576a
+   :target: https://www.codacy.com/app/mirco-nasuti/mri-meta-extract?utm_source=github.com&utm_medium=referral&utm_content=LREN-CHUV/mri-meta-extract&utm_campaign=Badge_Grade
+.. |CircleCI| image:: https://circleci.com/gh/LREN-CHUV/mri-meta-extract.svg?style=svg
+   :target: https://circleci.com/gh/LREN-CHUV/mri-meta-extract
