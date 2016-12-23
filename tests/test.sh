@@ -2,7 +2,7 @@
 
 # Start DB container
 echo "Starting DB container..."
-db_docker_id=$(docker run -d -p65432:5432 -e 'POSTGRES_PASSWORD=test' postgres)
+db_docker_id=$(docker run -d -p 65432:5432 -e 'POSTGRES_PASSWORD=test' postgres)
 
 # Wait for DB to be ready
 echo "Waiting for DB to be ready..."
