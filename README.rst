@@ -9,12 +9,17 @@ DICOM files and folder tree containing
 Build
 -----
 
-Run the ``python setup.py bdist`` script.
+Run ``python setup.py bdist_wheel``.
+
+Push to PyPi
+------------
+
+Run ``twine upload dist/*``.
 
 Install
 -------
 
-Run the ``pip install mri-meta-extract`` script.
+Run ``pip install mri-meta-extract``.
 
 Test
 ----
