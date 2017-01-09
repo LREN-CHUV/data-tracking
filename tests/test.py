@@ -17,11 +17,12 @@ class BasicTestSuite(unittest.TestCase):
         self.nii_folder = "data/nii/"
         self.pid = "PR00001"
         self.scan_date = datetime.datetime(2014, 7, 23, 0, 0)
+        self.files_pattern = "/**/MR.*"
 
     def test_dicom_extract(self):
-        assert dicom_import.visit_info(self.dcm_folder, self.db_url)[0] in [self.pid]
-        assert dicom_import.visit_info(self.dcm_folder, self.db_url)[1] in [self.scan_date]
-        dicom_import.dicom2db(self.dcm_folder, self.db_url)
+        assert dicom_import.visit_info(self.dcm_folder, self.files_pattern, self.db_url)[0] in [self.pid]
+        assert dicom_import.visit_info(self.dcm_folder, self.files_pattern, self.db_url)[1] in [self.scan_date]
+        dicom_import.dicom2db(self.dcm_folder, self.files_pattern, self.db_url)
         assert dicom_import.conn.db_session.query(dicom_import.conn.Participant).count() == 1
 
     def test_nifti_extract(self):

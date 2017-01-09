@@ -29,12 +29,19 @@ conn = None
 # FUNCTIONS - DICOM
 ##########################################################################
 
-def dicom2db(folder, db_url=None):
+def dicom2db(folder, files_pattern='/**/MR.*', db_url=None):
+    """
+
+    :param folder: root folder
+    :param files_pattern: DICOM files pattern (default is '/**/MR.*')
+    :param db_url: DB URL, if not defined it will try to find an Airflow configuration file
+    :return:
+    """
     global conn
     logging.info("Connecting to DB...")
     conn = connection.Connection(db_url)
     checked = dict()
-    for filename in glob.iglob(folder + '/**/MR.*', recursive=True):
+    for filename in glob.iglob(folder + files_pattern, recursive=True):
         try:
             logging.debug("Processing '%s'" % filename)
 
@@ -65,11 +72,18 @@ def dicom2db(folder, db_url=None):
     conn.close()
 
 
-def visit_info(folder, db_url=None):
+def visit_info(folder, files_pattern='/**/MR.*', db_url=None):
+    """
+
+    :param folder: root folder
+    :param files_pattern: DICOM files pattern (default is '/**/MR.*')
+    :param db_url: DB URL, if not defined it will try to find an Airflow configuration file
+    :return: (participant_id, scan_date)
+    """
     global conn
     logging.info("Connecting to DB...")
     conn = connection.Connection(db_url)
-    for filename in glob.iglob(folder + '/**/MR.*', recursive=True):
+    for filename in glob.iglob(folder + files_pattern, recursive=True):
         try:
             logging.info("Processing '%s'" % filename)
             ds = dicom.read_file(filename)
