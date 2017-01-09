@@ -6,7 +6,7 @@ This is a Python library providing methods to extract meta-data from DICOM files
 
 ## Build
 
-Run `python setup.py bdist_wheel`.
+Run `python setup.py bdist_wheel`. (Use python3 to create python3 compatible release).
 
 ## Push to PyPi
 
@@ -25,12 +25,18 @@ Run `test.sh`
 
 You can use the following functions:
 
-* `dicom_import.dicom2db(folder)` to scan the `folder` folder containing DICOM files and store their meta-data into the 
-database.
+* `dicom_import.dicom2db(folder, files_pattern, db_url)` to scan the `folder` folder containing DICOM files and store 
+their meta-data into the database. You can optionally specify a custom `files_pattern` (use `*` as a wild card and `**` 
+as a folder recursive wild card). You can optionally specify a db_url too. If not defined, it will automatically try to 
+find an Airflow configuration file.
 
-* `dicom_import.visit_info(folder)` to get the participant_id and scan_date meta-data from the `folder` folder (n.b. the
-folder must not mix different participants).
+* `dicom_import.visit_info(folder, files_pattern, db_url)` to get the participant_id and scan_date meta-data from the `folder` folder (n.b. the
+folder must not mix different participants). You can optionally specify a custom `files_pattern` (use `*` as a wild card
+ and `**` as a folder recursive wild card). You can optionally specify a db_url too. If not defined, it will 
+ automatically try to find an Airflow configuration file.
 
-* `nifti_import.nifti2db(folder, participant_id, scan_date)` to scan the `folder` folder containing NIFTI files and
+* `nifti_import.nifti2db(folder, participant_id, scan_date, files_pattern, db_url)` to scan the `folder` folder containing NIFTI files and
 store the information contained in the files names into the DB. It links it to the participant and scan tables based on 
-`participant_id` and `scan_date` parameters.
+`participant_id` and `scan_date` parameters. You can optionally specify a custom `files_pattern` (use `*` as a wild card
+and `**` as a folder recursive wild card). You can optionally specify a db_url too. If not defined, it will 
+automatically try to find an Airflow configuration file.

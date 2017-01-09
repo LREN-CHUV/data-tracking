@@ -5,6 +5,7 @@
 import logging
 import re
 import glob
+import os
 
 from . import connection
 from datetime import date
@@ -23,10 +24,19 @@ conn = None
 # FUNCTIONS - NIFTI
 ##########################################################################
 
-def nifti2db(folder, participant_id, scan_date, db_url=None):
+def nifti2db(folder, participant_id, scan_date, files_pattern='/**/*.nii', db_url=None):
+    """
+    Extract some meta-data from nifti files based on their paths and file names
+    :param folder: root folder
+    :param participant_id: participant ID
+    :param scan_date: scan date
+    :param files_pattern: Nifti files pattern (default is '/**/*.nii')
+    :param db_url: DB URL, if not defined it will try to find an Airflow configuration file
+    :return:
+    """
     global conn
     conn = connection.Connection(db_url)
-    for file_path in glob.iglob(folder + '/**/*.nii', recursive=True):
+    for file_path in glob.iglob(os.path.join(folder, files_pattern), recursive=True):
         logging.info("Processing '%s'" % file_path)
         try:
             session = int(re.findall(

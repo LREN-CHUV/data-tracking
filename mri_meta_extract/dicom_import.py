@@ -31,7 +31,7 @@ conn = None
 
 def dicom2db(folder, files_pattern='/**/MR.*', db_url=None):
     """
-
+    Extract some meta-data from DICOM files and store them into a DB
     :param folder: root folder
     :param files_pattern: DICOM files pattern (default is '/**/MR.*')
     :param db_url: DB URL, if not defined it will try to find an Airflow configuration file
@@ -41,7 +41,7 @@ def dicom2db(folder, files_pattern='/**/MR.*', db_url=None):
     logging.info("Connecting to DB...")
     conn = connection.Connection(db_url)
     checked = dict()
-    for filename in glob.iglob(folder + files_pattern, recursive=True):
+    for filename in glob.iglob(os.path.join(folder, files_pattern), recursive=True):
         try:
             logging.debug("Processing '%s'" % filename)
 
@@ -74,7 +74,7 @@ def dicom2db(folder, files_pattern='/**/MR.*', db_url=None):
 
 def visit_info(folder, files_pattern='/**/MR.*', db_url=None):
     """
-
+    Get visit meta-data from DICOM files (participant ID and scan date)
     :param folder: root folder
     :param files_pattern: DICOM files pattern (default is '/**/MR.*')
     :param db_url: DB URL, if not defined it will try to find an Airflow configuration file
@@ -83,7 +83,8 @@ def visit_info(folder, files_pattern='/**/MR.*', db_url=None):
     global conn
     logging.info("Connecting to DB...")
     conn = connection.Connection(db_url)
-    for filename in glob.iglob(folder + files_pattern, recursive=True):
+    logging.info(os.path.join(folder, files_pattern))
+    for filename in glob.iglob(os.path.join(folder, files_pattern), recursive=True):
         try:
             logging.info("Processing '%s'" % filename)
             ds = dicom.read_file(filename)
