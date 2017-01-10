@@ -24,13 +24,13 @@ conn = None
 # FUNCTIONS - NIFTI
 ##########################################################################
 
-def nifti2db(folder, participant_id, scan_date, files_pattern='/**/*.nii', db_url=None):
+def nifti2db(folder, participant_id, scan_date, files_pattern='**/*.nii', db_url=None):
     """
     Extract some meta-data from nifti files based on their paths and file names
     :param folder: root folder
     :param participant_id: participant ID
     :param scan_date: scan date
-    :param files_pattern: Nifti files pattern (default is '/**/*.nii')
+    :param files_pattern: Nifti files pattern (default is '**/*.nii')
     :param db_url: DB URL, if not defined it will try to find an Airflow configuration file
     :return:
     """
