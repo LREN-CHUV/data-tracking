@@ -19,7 +19,7 @@ echo "Running unit tests..."
 python3 test.py
 
 # Remove DB container (if not on CircleCI)
-if [ "$CIRCLECI" = false ] ; then
+if [ -z "$CIRCLECI" ] || [ "$CIRCLECI" = false ] ; then
     echo "Removing DB container..."
     docker kill ${db_docker_id}
     docker rm -f ${db_docker_id}
