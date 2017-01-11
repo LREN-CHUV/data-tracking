@@ -39,7 +39,7 @@ def nifti2db(folder, participant_id, scan_date, files_pattern='**/*.nii', db_url
     for file_path in glob.iglob(os.path.join(folder, files_pattern), recursive=True):
         logging.info("Processing '%s'" % file_path)
         try:
-            session = int(re.findall(
+            session = str(re.findall(
                 '/([^/]+?)/[^/]+?/[^/]+?/[^/]+?\.nii', file_path)[0])
             sequence = re.findall(
                 '/([^/]+?)/[^/]+?/[^/]+?\.nii', file_path)[0]
