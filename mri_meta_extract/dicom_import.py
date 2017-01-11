@@ -29,7 +29,7 @@ conn = None
 # FUNCTIONS - DICOM
 ##########################################################################
 
-def dicom2db(folder, files_pattern='/**/MR.*', db_url=None):
+def dicom2db(folder, files_pattern='**/MR.*', db_url=None):
     """
     Extract some meta-data from DICOM files and store them into a DB
     :param folder: root folder
@@ -72,7 +72,7 @@ def dicom2db(folder, files_pattern='/**/MR.*', db_url=None):
     conn.close()
 
 
-def visit_info(folder, files_pattern='/**/MR.*', db_url=None):
+def visit_info(folder, files_pattern='**/MR.*', db_url=None):
     """
     Get visit meta-data from DICOM files (participant ID and scan date)
     :param folder: root folder
