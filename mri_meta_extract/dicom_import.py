@@ -414,13 +414,14 @@ def extract_repetition(ds, sequence_id):
 
 
 def extract_dicom(path, repetition_id):
-    dcm = conn.db_session.query(conn.Dicom).filter_by(
+    dcm = conn.db_session.query(conn.DataFile).filter_by(
         path=path, repetition_id=repetition_id).first()
 
     if not dcm:
-        dcm = conn.Dicom(
+        dcm = conn.DataFile(
             path=path,
-            repetition_id=repetition_id
+            repetition_id=repetition_id,
+            type='dicom'
         )
         conn.db_session.add(dcm)
         conn.db_session.commit()

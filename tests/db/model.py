@@ -13,33 +13,51 @@ class Check(Base):
 
     id = Column(Integer, primary_key=True, nullable=False)
     quality_check_id = Column(ForeignKey('quality_check.id'), nullable=False, index=True)
-    nifti_id = Column(ForeignKey('nifti.id'), nullable=False, index=True)
+    data_file_id = Column(ForeignKey('data_file.id'), nullable=False, index=True)
     value = Column(Float, nullable=False)
 
-    nifti = relationship('Nifti')
+    data_file = relationship('DataFile')
     quality_check = relationship('QualityCheck')
 
 
-class Dicom(Base):
-    __tablename__ = 'dicom'
+class Provenance(Base):
+    __tablename__ = 'provenance'
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    airflow_step_id = Column(ForeignKey('processing_step.id'), nullable=False, index=True)
+    dataset = Column(Text, nullable=False)
+    matlab_version = Column(Text, nullable=False)
+    spm_version = Column(Text, nullable=False)
+    spm_revision = Column(Text, nullable=False)
+    fn_called = Column(Text, nullable=False)
+    fn_version = Column(Text, nullable=False)
+
+    processing_step = relationship('ProcessingStep')
+
+
+class ProcessingStep(Base):
+    __tablename__ = 'processing_step'
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    previous_step_id = Column(ForeignKey('processing_step.id'), nullable=False, index=True)
+    name = Column(Text, nullable=False)
+
+    processing_step = relationship('ProcessingStep')
+
+
+class DataFile(Base):
+    __tablename__ = 'data_file'
 
     id = Column(Integer, primary_key=True, nullable=False)
     repetition_id = Column(ForeignKey('repetition.id'), nullable=False, index=True)
+    processing_step_id = Column(ForeignKey('processing_step.id'), nullable=False, index=True)
     path = Column(Text, nullable=False)
+    type = Column(Text, nullable=False)
+    result_type = Column(String(255), nullable=True)
+    output_type = Column(String(255), nullable=True)
 
     repetition = relationship('Repetition')
-
-
-class Nifti(Base):
-    __tablename__ = 'nifti'
-
-    id = Column(Integer, primary_key=True, nullable=False)
-    repetition_id = Column(ForeignKey('repetition.id'), nullable=False, index=True)
-    path = Column(Text, nullable=False)
-    result_type = Column(String(255), nullable=False)
-    output_type = Column(String(255), nullable=False)
-
-    repetition = relationship('Repetition')
+    processing_step = relationship('ProcessingStep')
 
 
 class Participant(Base):

@@ -106,7 +106,7 @@ def save_nifti_meta(
         postfix_type,
         file_path
 ):
-    if not conn.db_session.query(conn.Nifti).filter_by(path=file_path).first():
+    if not conn.db_session.query(conn.DataFile).filter_by(path=file_path).first():
 
         scan = conn.db_session.query(conn.Scan).filter_by(date=scan_date, participant_id=participant_id)\
             .first()
@@ -138,9 +138,10 @@ def save_nifti_meta(
 
                     if rep:
                         repetition_id = rep.id
-                        nii = conn.Nifti(
+                        nii = conn.DataFile(
                             repetition_id=repetition_id,
                             path=file_path,
+                            type='nifti',
                             result_type=prefix_type,
                             output_type=postfix_type
                         )
