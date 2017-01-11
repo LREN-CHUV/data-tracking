@@ -196,7 +196,7 @@ def extract_scan(ds, participant_id, role, comment):
 
 def extract_session(ds, scan_id):
     try:
-        session_value = int(ds.StudyID)
+        session_value = str(ds.StudyID)
 
         session = conn.db_session.query(conn.Session).filter_by(
             scan_id=scan_id, value=session_value).first()

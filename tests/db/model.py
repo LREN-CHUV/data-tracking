@@ -156,6 +156,6 @@ class Session(Base):
 
     id = Column(Integer, primary_key=True, nullable=False)
     scan_id = Column(ForeignKey('scan.id'), nullable=False, index=True)
-    value = Column(Integer, nullable=False)
+    value = Column(String, nullable=False)
 
     scan = relationship('Scan')
