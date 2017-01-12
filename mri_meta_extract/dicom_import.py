@@ -62,7 +62,7 @@ def dicom2db(folder, files_pattern='**/MR.*', db_url=None):
                 repetition_id = extract_repetition(ds, sequence_id)
 
                 checked[leaf_folder] = repetition_id
-            extract_dicom(filename, checked[leaf_folder])
+            extract_dicom(filename, checked[leaf_folder], create_processing_step())
 
         except InvalidDicomError:
             logging.warning("%s is not a DICOM file !" % filename)
@@ -140,12 +140,12 @@ def print_db_except():
 ##########################################################################
 
 
-def create_acquisition_step():
+def create_previous_step():
     processing_step = conn.db_session.query(
-        conn.Participant).filter_by(name=PREVIOUS_STEP_NAME).first()
+        conn.ProcessingStep).filter_by(name=PREVIOUS_STEP_NAME).first()
 
     if not processing_step:
-        processing_step = conn.Participant(
+        processing_step = conn.ProcessingStep(
             name=PREVIOUS_STEP_NAME
         )
         conn.db_session.add(processing_step)
@@ -154,12 +154,12 @@ def create_acquisition_step():
 
 
 def create_processing_step():
-    previous_step_id = create_acquisition_step()
+    previous_step_id = create_previous_step()
     processing_step = conn.db_session.query(
-        conn.Participant).filter_by(name=STEP_NAME, previous_step_id=previous_step_id).first()
+        conn.ProcessingStep).filter_by(name=STEP_NAME, previous_step_id=previous_step_id).first()
 
     if not processing_step:
-        processing_step = conn.Participant(
+        processing_step = conn.ProcessingStep(
             name=STEP_NAME,
             previous_step_id=previous_step_id
         )
@@ -444,7 +444,7 @@ def extract_repetition(ds, sequence_id):
                         "SeriesNumber")
 
 
-def extract_dicom(path, repetition_id):
+def extract_dicom(path, repetition_id, processing_step_id):
     dcm = conn.db_session.query(conn.DataFile).filter_by(
         path=path, repetition_id=repetition_id).first()
 
@@ -452,7 +452,8 @@ def extract_dicom(path, repetition_id):
         dcm = conn.DataFile(
             path=path,
             repetition_id=repetition_id,
-            type='dicom'
+            type='dicom',
+            processing_step_id=processing_step_id
         )
         conn.db_session.add(dcm)
         conn.db_session.commit()

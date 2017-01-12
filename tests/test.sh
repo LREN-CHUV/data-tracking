@@ -11,7 +11,9 @@ sleep 5  # TODO: replace this by a test
 # Init DB
 echo "Initializing DB..."
 cd db
+cp alembic.ini.sample alembic.ini
 alembic upgrade head
+rm alembic.ini
 cd ..
 
 # Run unit tests

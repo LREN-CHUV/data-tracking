@@ -65,6 +65,7 @@ def nifti2db(folder, participant_id, scan_date, files_pattern='**/*.nii', db_url
                 except IndexError:
                     postfix_type = "unknown"
 
+                processing_step_id = create_processing_step()
                 save_nifti_meta(
                     participant_id,
                     scan_date,
@@ -73,7 +74,8 @@ def nifti2db(folder, participant_id, scan_date, files_pattern='**/*.nii', db_url
                     repetition,
                     prefix_type,
                     postfix_type,
-                    file_path
+                    file_path,
+                    processing_step_id
                 )
 
         except ValueError:
@@ -100,12 +102,12 @@ def date_from_str(date_str):
 ##########################################################################
 
 
-def create_dicom_to_nifti_step():
+def create_previous_step():
     processing_step = conn.db_session.query(
-        conn.Participant).filter_by(name=PREVIOUS_STEP_NAME).first()
+        conn.ProcessingStep).filter_by(name=PREVIOUS_STEP_NAME).first()
 
     if not processing_step:
-        processing_step = conn.Participant(
+        processing_step = conn.ProcessingStep(
             name=PREVIOUS_STEP_NAME
         )
         conn.db_session.add(processing_step)
@@ -114,12 +116,12 @@ def create_dicom_to_nifti_step():
 
 
 def create_processing_step():
-    previous_step_id = create_dicom_to_nifti_step()
+    previous_step_id = create_previous_step()
     processing_step = conn.db_session.query(
-        conn.Participant).filter_by(name=STEP_NAME, previous_step_id=previous_step_id).first()
+        conn.ProcessingStep).filter_by(name=STEP_NAME, previous_step_id=previous_step_id).first()
 
     if not processing_step:
-        processing_step = conn.Participant(
+        processing_step = conn.ProcessingStep(
             name=STEP_NAME,
             previous_step_id=previous_step_id
         )
@@ -136,7 +138,8 @@ def save_nifti_meta(
         repetition,
         prefix_type,
         postfix_type,
-        file_path
+        file_path,
+        processing_step_id
 ):
     if not conn.db_session.query(conn.DataFile).filter_by(path=file_path).first():
 
@@ -174,6 +177,7 @@ def save_nifti_meta(
                             repetition_id=repetition_id,
                             path=file_path,
                             type='nifti',
+                            processing_step_id=processing_step_id,
                             result_type=prefix_type,
                             output_type=postfix_type
                         )
