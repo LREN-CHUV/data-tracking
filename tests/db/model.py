@@ -39,7 +39,7 @@ class ProcessingStep(Base):
     __tablename__ = 'processing_step'
 
     id = Column(Integer, primary_key=True, nullable=False)
-    previous_step_id = Column(ForeignKey('processing_step.id'), nullable=False, index=True)
+    previous_step_id = Column(ForeignKey('processing_step.id'), nullable=True, index=True)
     name = Column(Text, nullable=False)
 
     processing_step = relationship('ProcessingStep')
