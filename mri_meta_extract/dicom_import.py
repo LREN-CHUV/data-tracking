@@ -62,8 +62,9 @@ def dicom2db(folder, files_pattern='**/MR.*', db_url=None):
                 repetition_id = extract_repetition(ds, sequence_id)
 
                 checked[leaf_folder] = repetition_id
-            extract_dicom(filename, checked[leaf_folder], create_processing_step())
-
+            processing_step_id = create_processing_step()
+            extract_dicom(filename, checked[leaf_folder], processing_step_id)
+            mark_processing_date(processing_step_id)
         except InvalidDicomError:
             logging.warning("%s is not a DICOM file !" % filename)
 
@@ -138,6 +139,13 @@ def print_db_except():
 ##########################################################################
 # FUNCTIONS - DATABASE
 ##########################################################################
+
+
+def mark_processing_date(processing_step_id):
+    processing_step = conn.db_session.query(
+        conn.ProcessingStep).filter_by(id=processing_step_id).first()
+    processing_step.execution_date = datetime.datetime.now()
+    conn.db_session.commit()
 
 
 def create_previous_step():

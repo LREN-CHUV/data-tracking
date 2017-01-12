@@ -8,8 +8,7 @@ import glob
 import os
 
 from . import connection
-from datetime import date
-
+from datetime import date, datetime
 
 ##########################################################################
 # GLOBAL
@@ -77,6 +76,7 @@ def nifti2db(folder, participant_id, scan_date, files_pattern='**/*.nii', db_url
                     file_path,
                     processing_step_id
                 )
+                mark_processing_date(processing_step_id)
 
         except ValueError:
             logging.warning(
@@ -100,6 +100,13 @@ def date_from_str(date_str):
 ##########################################################################
 # FUNCTIONS - DATABASE
 ##########################################################################
+
+
+def mark_processing_date(processing_step_id):
+    processing_step = conn.db_session.query(
+        conn.ProcessingStep).filter_by(id=processing_step_id).first()
+    processing_step.execution_date = datetime.datetime.now()
+    conn.db_session.commit()
 
 
 def create_previous_step():
