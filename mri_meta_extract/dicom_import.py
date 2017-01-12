@@ -37,7 +37,7 @@ def dicom2db(folder, dataset, step_name=DEFAULT_STEP_NAME, previous_step_name=No
     Extract some meta-data from DICOM files and store them into a DB
     :param folder: root folder
     :param dataset: name of dataset
-    :param step_name: Airflow step name
+    :param step_name: Airflow step name (default is DICOM import)
     :param previous_step_name: previous Airflow step name
     :param files_pattern: DICOM files pattern (default is '/**/MR.*')
     :param db_url: DB URL, if not defined it will try to find an Airflow configuration file

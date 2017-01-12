@@ -49,7 +49,7 @@ def nifti2db(
     :param spm_revision: SPM revision
     :param fn_called: name of function called
     :param fn_version: version of function
-    :param step_name: Airflow step name
+    :param step_name: Airflow step name (default is 'NIFTI import')
     :param previous_step_name: previous Airflow step name
     :param files_pattern: Nifti files pattern (default is '**/*.nii')
     :param db_url: DB URL, if not defined it will try to find an Airflow configuration file
