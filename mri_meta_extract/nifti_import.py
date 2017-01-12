@@ -14,10 +14,8 @@ from datetime import date, datetime
 # GLOBAL
 ##########################################################################
 
-ARGS = ['root_folder', 'csv', 'db']
-
-PREVIOUS_STEP_NAME = 'DICOM to NIFTI'
-STEP_NAME = 'NIFTI import'
+DEFAULT_FILES_PATTERN = '**/*.nii'
+DEFAULT_STEP_NAME = 'NIFTI import'
 
 conn = None
 
@@ -26,12 +24,33 @@ conn = None
 # FUNCTIONS - NIFTI
 ##########################################################################
 
-def nifti2db(folder, participant_id, scan_date, files_pattern='**/*.nii', db_url=None):
+def nifti2db(
+        folder,
+        participant_id,
+        scan_date,
+        dataset,
+        matlab_version=None,
+        spm_version=None,
+        spm_revision=None,
+        fn_called=None,
+        fn_version=None,
+        step_name=DEFAULT_STEP_NAME,
+        previous_step_name=None,
+        files_pattern=DEFAULT_FILES_PATTERN,
+        db_url=None):
     """
     Extract some meta-data from nifti files based on their paths and file names
     :param folder: root folder
     :param participant_id: participant ID
     :param scan_date: scan date
+    :param dataset: name of dataset
+    :param matlab_version: Matlab version
+    :param spm_version: SPM version
+    :param spm_revision: SPM revision
+    :param fn_called: name of function called
+    :param fn_version: version of function
+    :param step_name: Airflow step name
+    :param previous_step_name: previous Airflow step name
     :param files_pattern: Nifti files pattern (default is '**/*.nii')
     :param db_url: DB URL, if not defined it will try to find an Airflow configuration file
     :return:
@@ -64,7 +83,9 @@ def nifti2db(folder, participant_id, scan_date, files_pattern='**/*.nii', db_url
                 except IndexError:
                     postfix_type = "unknown"
 
-                processing_step_id = create_processing_step()
+                provenance_id = create_provenance(dataset, matlab_version, spm_version, spm_revision, fn_called,
+                                                  fn_version)
+                processing_step_id = create_processing_step(step_name, previous_step_name, provenance_id)
                 save_nifti_meta(
                     participant_id,
                     scan_date,
@@ -102,35 +123,46 @@ def date_from_str(date_str):
 ##########################################################################
 
 
+def create_provenance(dataset, matlab_version, spm_version, spm_revision, fn_called, fn_version):
+    provenance = conn.db_session.query(conn.Provenance).filter_by(
+        dataset=dataset, matlab_version=matlab_version, spm_version=spm_version, spm_revision=spm_revision,
+        fn_called=fn_called, fn_version=fn_version).first()
+
+    if not provenance:
+        provenance = conn.Provenance(
+            dataset=dataset, matlab_version=matlab_version, spm_version=spm_version, spm_revision=spm_revision,
+            fn_called=fn_called, fn_version=fn_version
+        )
+        conn.db_session.add(provenance)
+        conn.db_session.commit()
+    return provenance.id
+
+
 def mark_processing_date(processing_step_id):
     processing_step = conn.db_session.query(
         conn.ProcessingStep).filter_by(id=processing_step_id).first()
-    processing_step.execution_date = datetime.datetime.now()
+    processing_step.execution_date = datetime.now()
     conn.db_session.commit()
 
 
-def create_previous_step():
+def get_previous_step(name):
+    if not name:
+        return None
     processing_step = conn.db_session.query(
-        conn.ProcessingStep).filter_by(name=PREVIOUS_STEP_NAME).first()
-
-    if not processing_step:
-        processing_step = conn.ProcessingStep(
-            name=PREVIOUS_STEP_NAME
-        )
-        conn.db_session.add(processing_step)
-        conn.db_session.commit()
+        conn.ProcessingStep).filter_by(name=name).first()
     return processing_step.id
 
 
-def create_processing_step():
-    previous_step_id = create_previous_step()
+def create_processing_step(step_name, previous_step_name, provenance_id):
+    previous_step_id = get_previous_step(previous_step_name)
     processing_step = conn.db_session.query(
-        conn.ProcessingStep).filter_by(name=STEP_NAME, previous_step_id=previous_step_id).first()
+        conn.ProcessingStep).filter_by(name=step_name, previous_step_id=previous_step_id).first()
 
     if not processing_step:
         processing_step = conn.ProcessingStep(
-            name=STEP_NAME,
-            previous_step_id=previous_step_id
+            name=step_name,
+            previous_step_id=previous_step_id,
+            provenance_id=provenance_id
         )
         conn.db_session.add(processing_step)
         conn.db_session.commit()

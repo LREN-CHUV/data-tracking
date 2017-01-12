@@ -20,17 +20,21 @@ class BasicTestSuite(unittest.TestCase):
         self.dcm_files_pattern = "**/MR.*"
         self.nii_files_pattern = "**/*.nii"
         self.nifti_type = "nifti"
+        self.dataset = "TEST DATA"
+        self.matlab_version = "2016"
 
     def test_dicom_extract(self):
         assert dicom_import.visit_info(self.dcm_folder, self.dcm_files_pattern, self.db_url)[0] in [self.pid]
         assert dicom_import.visit_info(self.dcm_folder, self.dcm_files_pattern, self.db_url)[1] in [self.scan_date]
-        dicom_import.dicom2db(self.dcm_folder, self.dcm_files_pattern, self.db_url)
+        dicom_import.dicom2db(self.dcm_folder, self.dataset, files_pattern=self.dcm_files_pattern, db_url=self.db_url)
         assert dicom_import.conn.db_session.query(dicom_import.conn.Participant).count() == 1
 
     def test_nifti_extract(self):
-        nifti_import.nifti2db(self.nii_folder, self.pid, self.scan_date, self.nii_files_pattern, self.db_url)
+        nifti_import.nifti2db(self.nii_folder, self.pid, self.scan_date, self.dataset, self.matlab_version,
+                              files_pattern=self.nii_files_pattern, db_url=self.db_url)
         assert nifti_import.conn.db_session.query(nifti_import.conn.DataFile).filter_by(
             type=self.nifti_type).count() == 2
+
 
 if __name__ == '__main__':
     unittest.main()

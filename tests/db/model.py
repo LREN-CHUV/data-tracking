@@ -25,11 +25,11 @@ class Provenance(Base):
 
     id = Column(Integer, primary_key=True, nullable=False)
     dataset = Column(Text, nullable=False)
-    matlab_version = Column(Text, nullable=False)
-    spm_version = Column(Text, nullable=False)
-    spm_revision = Column(Text, nullable=False)
-    fn_called = Column(Text, nullable=False)
-    fn_version = Column(Text, nullable=False)
+    matlab_version = Column(Text, nullable=True)
+    spm_version = Column(Text, nullable=True)
+    spm_revision = Column(Text, nullable=True)
+    fn_called = Column(Text, nullable=True)
+    fn_version = Column(Text, nullable=True)
 
 
 class ProcessingStep(Base):
@@ -38,7 +38,7 @@ class ProcessingStep(Base):
     id = Column(Integer, primary_key=True, nullable=False)
     previous_step_id = Column(ForeignKey('processing_step.id'), nullable=True, index=True)
     provenance_id = Column(ForeignKey('provenance.id'), nullable=False, index=True)
-    name = Column(Text, nullable=False)
+    name = Column(Text, nullable=False, unique=True)
     execution_date = Column(Date, nullable=True)
 
     processing_step = relationship('ProcessingStep')

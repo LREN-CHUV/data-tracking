@@ -22,8 +22,8 @@ DEFAULT_ROLE = 'U'
 DEFAULT_COMMENT = ''
 DEFAULT_GENDER = 'unknown'
 
-PREVIOUS_STEP_NAME = 'Acquisition'
-STEP_NAME = 'DICOM import'
+DEFAULT_FILES_PATTERN = '**/MR.*'
+DEFAULT_STEP_NAME = 'DICOM import'
 
 conn = None
 
@@ -32,10 +32,13 @@ conn = None
 # FUNCTIONS - DICOM
 ##########################################################################
 
-def dicom2db(folder, files_pattern='**/MR.*', db_url=None):
+def dicom2db(folder, dataset, step_name=DEFAULT_STEP_NAME, previous_step_name=None, files_pattern=DEFAULT_FILES_PATTERN, db_url=None):
     """
     Extract some meta-data from DICOM files and store them into a DB
     :param folder: root folder
+    :param dataset: name of dataset
+    :param step_name: Airflow step name
+    :param previous_step_name: previous Airflow step name
     :param files_pattern: DICOM files pattern (default is '/**/MR.*')
     :param db_url: DB URL, if not defined it will try to find an Airflow configuration file
     :return:
@@ -62,7 +65,9 @@ def dicom2db(folder, files_pattern='**/MR.*', db_url=None):
                 repetition_id = extract_repetition(ds, sequence_id)
 
                 checked[leaf_folder] = repetition_id
-            processing_step_id = create_processing_step()
+
+            provenance_id = create_provenance(dataset)
+            processing_step_id = create_processing_step(step_name, previous_step_name, provenance_id)
             extract_dicom(filename, checked[leaf_folder], processing_step_id)
             mark_processing_date(processing_step_id)
         except InvalidDicomError:
@@ -76,7 +81,7 @@ def dicom2db(folder, files_pattern='**/MR.*', db_url=None):
     conn.close()
 
 
-def visit_info(folder, files_pattern='**/MR.*', db_url=None):
+def visit_info(folder, files_pattern=DEFAULT_FILES_PATTERN, db_url=None):
     """
     Get visit meta-data from DICOM files (participant ID and scan date)
     :param folder: root folder
@@ -141,6 +146,16 @@ def print_db_except():
 ##########################################################################
 
 
+def create_provenance(dataset):
+    provenance = conn.db_session.query(conn.Provenance).filter_by(dataset=dataset).first()
+
+    if not provenance:
+        provenance = conn.Provenance(dataset=dataset)
+        conn.db_session.add(provenance)
+        conn.db_session.commit()
+    return provenance.id
+
+
 def mark_processing_date(processing_step_id):
     processing_step = conn.db_session.query(
         conn.ProcessingStep).filter_by(id=processing_step_id).first()
@@ -148,28 +163,24 @@ def mark_processing_date(processing_step_id):
     conn.db_session.commit()
 
 
-def create_previous_step():
+def get_previous_step(name):
+    if not name:
+        return None
     processing_step = conn.db_session.query(
-        conn.ProcessingStep).filter_by(name=PREVIOUS_STEP_NAME).first()
-
-    if not processing_step:
-        processing_step = conn.ProcessingStep(
-            name=PREVIOUS_STEP_NAME
-        )
-        conn.db_session.add(processing_step)
-        conn.db_session.commit()
+        conn.ProcessingStep).filter_by(name=name).first()
     return processing_step.id
 
 
-def create_processing_step():
-    previous_step_id = create_previous_step()
+def create_processing_step(step_name, previous_step_name, provenance_id):
+    previous_step_id = get_previous_step(previous_step_name)
     processing_step = conn.db_session.query(
-        conn.ProcessingStep).filter_by(name=STEP_NAME, previous_step_id=previous_step_id).first()
+        conn.ProcessingStep).filter_by(name=step_name, previous_step_id=previous_step_id).first()
 
     if not processing_step:
         processing_step = conn.ProcessingStep(
-            name=STEP_NAME,
-            previous_step_id=previous_step_id
+            name=step_name,
+            previous_step_id=previous_step_id,
+            provenance_id=provenance_id
         )
         conn.db_session.add(processing_step)
         conn.db_session.commit()
