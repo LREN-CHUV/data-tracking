@@ -24,7 +24,6 @@ class Provenance(Base):
     __tablename__ = 'provenance'
 
     id = Column(Integer, primary_key=True, nullable=False)
-    airflow_step_id = Column(ForeignKey('processing_step.id'), nullable=False, index=True)
     dataset = Column(Text, nullable=False)
     matlab_version = Column(Text, nullable=False)
     spm_version = Column(Text, nullable=False)
@@ -32,17 +31,18 @@ class Provenance(Base):
     fn_called = Column(Text, nullable=False)
     fn_version = Column(Text, nullable=False)
 
-    processing_step = relationship('ProcessingStep')
-
 
 class ProcessingStep(Base):
     __tablename__ = 'processing_step'
 
     id = Column(Integer, primary_key=True, nullable=False)
     previous_step_id = Column(ForeignKey('processing_step.id'), nullable=True, index=True)
+    provenance_id = Column(ForeignKey('provenance.id'), nullable=False, index=True)
     name = Column(Text, nullable=False)
+    execution_date = Column(Date, nullable=True)
 
     processing_step = relationship('ProcessingStep')
+    provenance = relationship('Provenance')
 
 
 class DataFile(Base):
