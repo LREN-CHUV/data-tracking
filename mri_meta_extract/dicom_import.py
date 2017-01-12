@@ -22,6 +22,9 @@ DEFAULT_ROLE = 'U'
 DEFAULT_COMMENT = ''
 DEFAULT_GENDER = 'unknown'
 
+PREVIOUS_STEP_NAME = 'Acquisition'
+STEP_NAME = 'DICOM import'
+
 conn = None
 
 
@@ -135,6 +138,34 @@ def print_db_except():
 ##########################################################################
 # FUNCTIONS - DATABASE
 ##########################################################################
+
+
+def create_acquisition_step():
+    processing_step = conn.db_session.query(
+        conn.Participant).filter_by(name=PREVIOUS_STEP_NAME).first()
+
+    if not processing_step:
+        processing_step = conn.Participant(
+            name=PREVIOUS_STEP_NAME
+        )
+        conn.db_session.add(processing_step)
+        conn.db_session.commit()
+    return processing_step.id
+
+
+def create_processing_step():
+    previous_step_id = create_acquisition_step()
+    processing_step = conn.db_session.query(
+        conn.Participant).filter_by(name=STEP_NAME, previous_step_id=previous_step_id).first()
+
+    if not processing_step:
+        processing_step = conn.Participant(
+            name=STEP_NAME,
+            previous_step_id=previous_step_id
+        )
+        conn.db_session.add(processing_step)
+        conn.db_session.commit()
+    return processing_step.id
 
 
 def extract_participant(ds, handedness):

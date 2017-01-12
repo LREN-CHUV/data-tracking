@@ -17,6 +17,9 @@ from datetime import date
 
 ARGS = ['root_folder', 'csv', 'db']
 
+PREVIOUS_STEP_NAME = 'DICOM to NIFTI'
+STEP_NAME = 'NIFTI import'
+
 conn = None
 
 
@@ -95,6 +98,35 @@ def date_from_str(date_str):
 ##########################################################################
 # FUNCTIONS - DATABASE
 ##########################################################################
+
+
+def create_dicom_to_nifti_step():
+    processing_step = conn.db_session.query(
+        conn.Participant).filter_by(name=PREVIOUS_STEP_NAME).first()
+
+    if not processing_step:
+        processing_step = conn.Participant(
+            name=PREVIOUS_STEP_NAME
+        )
+        conn.db_session.add(processing_step)
+        conn.db_session.commit()
+    return processing_step.id
+
+
+def create_processing_step():
+    previous_step_id = create_dicom_to_nifti_step()
+    processing_step = conn.db_session.query(
+        conn.Participant).filter_by(name=STEP_NAME, previous_step_id=previous_step_id).first()
+
+    if not processing_step:
+        processing_step = conn.Participant(
+            name=STEP_NAME,
+            previous_step_id=previous_step_id
+        )
+        conn.db_session.add(processing_step)
+        conn.db_session.commit()
+    return processing_step.id
+
 
 def save_nifti_meta(
         participant_id,
