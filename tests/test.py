@@ -1,40 +1,32 @@
-import unittest
 import sys
 import os
-import datetime
+
+from nose.tools import assert_equal
+from nose.tools import assert_not_equal
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from mri_meta_extract import dicom_import
-from mri_meta_extract import nifti_import
+from mri_meta_extract import files_recording
 
 
-class BasicTestSuite(unittest.TestCase):
-    """Basic test suite"""
+class TestA(object):
+    @classmethod
+    def setup_class(klass):
+        """This method is run once for each class before any tests are run"""
+
+    @classmethod
+    def teardown_class(klass):
+        """This method is run once for each class _after_ all tests are run"""
 
     def setUp(self):
-        self.db_url = "postgresql://postgres:test@localhost:65432/postgres"
-        self.dcm_folder = "./data/dcm/"
-        self.nii_folder = "./data/nii/"
-        self.pid = "PR00001"
-        self.scan_date = datetime.datetime(2014, 7, 23, 0, 0)
-        self.dcm_files_pattern = "**/MR.*"
-        self.nii_files_pattern = "**/*.nii"
-        self.nifti_type = "nifti"
-        self.dataset = "TEST DATA"
-        self.matlab_version = "2016"
+        """This method is run once before _each_ test method is executed"""
 
-    def test_dicom_extract(self):
-        assert dicom_import.visit_info(self.dcm_folder, self.dcm_files_pattern, self.db_url)[0] in [self.pid]
-        assert dicom_import.visit_info(self.dcm_folder, self.dcm_files_pattern, self.db_url)[1] in [self.scan_date]
-        dicom_import.dicom2db(self.dcm_folder, self.dataset, files_pattern=self.dcm_files_pattern, db_url=self.db_url)
-        assert dicom_import.conn.db_session.query(dicom_import.conn.Participant).count() == 1
+    def teardown(self):
+        """This method is run once after _each_ test method is executed"""
 
-    def test_nifti_extract(self):
-        nifti_import.nifti2db(self.nii_folder, self.pid, self.scan_date, self.dataset, self.matlab_version,
-                              files_pattern=self.nii_files_pattern, db_url=self.db_url)
-        assert nifti_import.conn.db_session.query(nifti_import.conn.DataFile).filter_by(
-            type=self.nifti_type).count() == 2
+    def test_init(self):
+        assert_equal("Some Value", "Some Value")
+        assert_not_equal("Correct Value", "Incorrect Value")
 
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_(self):
+        assert_equal(True, True)
+        assert_not_equal(True, False)

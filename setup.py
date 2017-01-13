@@ -20,5 +20,5 @@ setup(
     extras_require={
         'test': ['unittest'],
     },
-    install_requires=['airflow', 'pydicom', 'sqlalchemy']
+    install_requires=['airflow', 'pydicom', 'sqlalchemy', 'nose']
 )
