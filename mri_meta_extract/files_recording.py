@@ -28,9 +28,9 @@ def visit(folder, provenance_id, previous_step_id=None, db_url=None):
     :param db_url: (optional) Database URL. If not defined, it looks for an Airflow configuration file.
     :return: return processing step ID.
     """
-    logging.info("Running visit function with the following parameters : "
-                 "folder=%s, provenance_id=%s, step_id=%s, db_url=%s",
-                 (folder, provenance_id, previous_step_id, db_url))
+    # logging.info("Running visit function with the following parameters : "
+    #              "folder=%s, provenance_id=%s, step_id=%s, db_url=%s",
+    #              (folder, provenance_id, previous_step_id, db_url))
 
     logging.info("Connecting to database...")
     db_conn = connection.Connection(db_url)
@@ -62,10 +62,10 @@ def create_provenance(dataset, matlab_version=None, spm_version=None, spm_revisi
     :param db_url: (optional) Database URL. If not defined, it looks for an Airflow configuration file.
     :return: Provenance ID.
     """
-    logging.info("Running create_provenance function with the following parameters : "
-                 "dataset=%s, matlab_version=%s, spm_version=%s, spm_revision=%s, fn_called=%s, fn_version=%s, "
-                 "others=%s, db_url=%s",
-                 (dataset, matlab_version, spm_version, spm_revision, fn_called, fn_version, others, db_url))
+    # logging.info("Running create_provenance function with the following parameters : "
+    #              "dataset=%s, matlab_version=%s, spm_version=%s, spm_revision=%s, fn_called=%s, fn_version=%s, "
+    #              "others=%s, db_url=%s",
+    #              (dataset, matlab_version, spm_version, spm_revision, fn_called, fn_version, others, db_url))
 
     logging.info("Connecting to database...")
     db_conn = connection.Connection(db_url)

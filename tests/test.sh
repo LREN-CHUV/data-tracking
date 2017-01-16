@@ -10,10 +10,6 @@ if [ -z "$CIRCLECI" ] || [ "$CIRCLECI" = false ] ; then
     sleep 5  # TODO: replace this by a test
 fi
 
-# Init DB
-echo "Initializing DB..."
-./init_db.sh
-
 # Run unit tests
 echo "Running unit tests..."
 nosetests

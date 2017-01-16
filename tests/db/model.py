@@ -30,6 +30,7 @@ class Provenance(Base):
     spm_revision = Column(Text, nullable=True)
     fn_called = Column(Text, nullable=True)
     fn_version = Column(Text, nullable=True)
+    others = Column(Text, nullable=True)
 
 
 class ProcessingStep(Base):
