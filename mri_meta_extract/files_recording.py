@@ -83,10 +83,12 @@ def create_provenance(dataset, matlab_version=None, spm_version=None, spm_revisi
         db_conn.db_session.add(provenance)
         db_conn.db_session.commit()
 
+    provenance_id = provenance.id
+
     logging.info("Closing database connection...")
     db_conn.close()
 
-    return provenance.id
+    return provenance_id
 
 
 ########################################################################################################################

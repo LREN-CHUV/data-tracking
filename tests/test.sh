@@ -12,7 +12,7 @@ fi
 
 # Run unit tests
 echo "Running unit tests..."
-nosetests
+nosetests -v unittest.py
 
 # Remove DB container (if not on CircleCI)
 if [ -z "$CIRCLECI" ] || [ "$CIRCLECI" = false ] ; then
