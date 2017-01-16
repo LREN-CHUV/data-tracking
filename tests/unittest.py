@@ -34,4 +34,5 @@ class TestAll:
     def test_all(self):
         provenance_id = files_recording.create_provenance('TEST LREN DATA', db_url=self.db_url)
         files_recording.visit('./data/dcm/', provenance_id, db_url=self.db_url)
+        files_recording.visit('./data/nii/', provenance_id, db_url=self.db_url)
         assert_equal(self.db_conn.db_session.query(self.db_conn.Provenance).count(), 1)

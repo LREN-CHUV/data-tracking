@@ -1,6 +1,14 @@
 import datetime
+import glob
 import logging
+import os
+import magic  # python-magic
+import nibabel
+from nibabel import filebasedimages
+
 from . import connection
+from . import dicom_import
+from . import nifti_import
 
 
 ########################################################################################################################
@@ -12,7 +20,7 @@ VISIT_STEP_NAME = 'visit'
 
 
 ########################################################################################################################
-# PUBLIC FUNCTION
+# MAIN FUNCTIONS
 ########################################################################################################################
 
 def visit(folder, provenance_id, previous_step_id=None, db_url=None):
@@ -92,10 +100,18 @@ def create_provenance(dataset, matlab_version=None, spm_version=None, spm_revisi
 
 
 ########################################################################################################################
-# PRIVATE FUNCTION
+# SECONDARY FUNCTIONS
 ########################################################################################################################
 
 def create_step(db_conn, name, provenance_id, previous_step_id=None):
+    """
+    Create (or get if already exists) a processing step entity, store it in the database and get back a step ID.
+    :param db_conn: Database connection.
+    :param name: Step name.
+    :param provenance_id: Provenance ID.
+    :param previous_step_id: Previous processing step ID.
+    :return: Step ID.
+    """
     step = db_conn.db_session.query(db_conn.ProcessingStep).filter_by(
         name=name, provenance_id=provenance_id, previous_step_id=previous_step_id
     ).first()
@@ -114,8 +130,53 @@ def create_step(db_conn, name, provenance_id, previous_step_id=None):
 
 
 def record_files(db_conn, folder, provenance_id, step_id):
-    pass
+    """
+    Scan folder looking for files. Find type, meta-data, etc. Store all those data in a DB.
+    :param db_conn: Database connection.
+    :param folder: Folder to scan.
+    :param provenance_id: Provenance ID.
+    :param step_id: Step ID.
+    :return:
+    """
+    for file_path in glob.iglob(os.path.join(folder, "**/*"), recursive=True):
+        file_type = find_type(file_path)
+        if "DICOM" == file_type:
+            dicom_import.dicom2db(file_path, file_type, provenance_id, step_id, db_conn)
+        elif "NIFTI" == file_type:
+            nifti_import.nifti2db('PR00001', datetime.date.today(), file_path, file_type, provenance_id, step_id, db_conn)
+
+
+def find_type(file_path):
+    """
+    Get file type.
+    :param file_path: File path
+    :return: Type (can be DICOM, NIFTI, other, ...). If file_path is not a directory, returns None.
+    """
+    try:
+        file_type = magic.from_file(file_path)
+        if "DICOM medical imaging data" == file_type:
+            return "DICOM"
+        elif "data" == file_type:
+            try:
+                nibabel.load(file_path)
+                return "NIFTI"
+            except nibabel.filebasedimages.ImageFileError:
+                logging.info("found a file of type 'data' but does not seem to be NIFTI : " + file_path)
+        else:
+            logging.info("found a file with unhandled type (%s) : %s" % (file_type, file_path))
+    except IsADirectoryError:
+        return None
+
+    return "other"
 
 
 def visit_results(db_conn, folder, provenance_id, step_id):
+    """
+    TODO
+    :param db_conn:
+    :param folder:
+    :param provenance_id:
+    :param step_id:
+    :return:
+    """
     pass

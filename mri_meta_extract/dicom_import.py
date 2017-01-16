@@ -1,134 +1,72 @@
-##########################################################################
-# IMPORTS
-##########################################################################
-
-import os
-import glob
 import dicom
 import datetime
 import logging
 
-from . import connection
 from sqlalchemy.exc import IntegrityError
 from dicom.errors import InvalidDicomError
 
 
-##########################################################################
-# GLOBAL
-##########################################################################
+########################################################################################################################
+# SETTINGS
+########################################################################################################################
 
 DEFAULT_HANDEDNESS = 'unknown'
 DEFAULT_ROLE = 'U'
 DEFAULT_COMMENT = ''
 DEFAULT_GENDER = 'unknown'
 
-DEFAULT_FILES_PATTERN = '**/MR.*'
-DEFAULT_STEP_NAME = 'DICOM import'
+MALE_GENDER_LIST = ['m', 'male', 'man', 'boy']
+FEMALE_GENDER_LIST = ['f', 'female', 'woman', 'girl']
 
 conn = None
 
 
-##########################################################################
-# FUNCTIONS - DICOM
-##########################################################################
+########################################################################################################################
+# MAIN FUNCTIONS
+########################################################################################################################
 
-def dicom2db(folder, dataset, step_name=DEFAULT_STEP_NAME, previous_step_name=None, files_pattern=DEFAULT_FILES_PATTERN, db_url=None):
+def dicom2db(file_path, file_type, provenance_id, step_id, db_conn):
     """
-    Extract some meta-data from DICOM files and store them into a DB
-    :param folder: root folder
-    :param dataset: name of dataset
-    :param step_name: Airflow step name (default is DICOM import)
-    :param previous_step_name: previous Airflow step name
-    :param files_pattern: DICOM files pattern (default is '/**/MR.*')
-    :param db_url: DB URL, if not defined it will try to find an Airflow configuration file
+    Extract some meta-data from a DICOM file and store in a DB.
+    :param file_path: File path.
+    :param file_type: File type (should be 'DICOM').
+    :param provenance_id: Provenance ID.
+    :param step_id: Step ID
+    :param db_conn: Database connection.
     :return:
     """
     global conn
-    logging.info("Connecting to DB...")
-    conn = connection.Connection(db_url)
-    checked = dict()
-    for filename in glob.iglob(os.path.join(folder, files_pattern), recursive=True):
-        try:
-            logging.debug("Processing '%s'" % filename)
-
-            leaf_folder = os.path.split(filename)[0]
-            if leaf_folder not in checked:
-                logging.info("Extracting DICOM headers from '%s'" % filename)
-                ds = dicom.read_file(filename)
-
-                participant_id = extract_participant(ds, DEFAULT_HANDEDNESS)
-                scan_id = extract_scan(
-                    ds, participant_id, DEFAULT_ROLE, DEFAULT_COMMENT)
-                session_id = extract_session(ds, scan_id)
-                sequence_type_id = extract_sequence_type(ds)
-                sequence_id = extract_sequence(session_id, sequence_type_id)
-                repetition_id = extract_repetition(ds, sequence_id)
-
-                checked[leaf_folder] = repetition_id
-
-            provenance_id = create_provenance(dataset)
-            processing_step_id = create_processing_step(step_name, previous_step_name, provenance_id)
-            extract_dicom(filename, checked[leaf_folder], processing_step_id)
-            mark_processing_date(processing_step_id)
-        except InvalidDicomError:
-            logging.warning("%s is not a DICOM file !" % filename)
-
-        except IntegrityError:
-            print_db_except()
-            conn.db_session.rollback()
-
-    logging.info("Closing DB connection...")
-    conn.close()
+    conn = db_conn
+    logging.info("Processing '%s'" % file_path)
+    try:
+        logging.info("Extracting DICOM headers from '%s'" % file_path)
+        ds = dicom.read_file(file_path)
+        participant_id = extract_participant(ds, DEFAULT_HANDEDNESS)
+        scan_id = extract_scan(ds, participant_id, DEFAULT_ROLE, DEFAULT_COMMENT)
+        session_id = extract_session(ds, scan_id)
+        sequence_type_id = extract_sequence_type(ds)
+        sequence_id = extract_sequence(session_id, sequence_type_id)
+        repetition_id = extract_repetition(ds, sequence_id)
+        extract_dicom(file_path, file_type, repetition_id, step_id)
+    except InvalidDicomError:
+        logging.warning("%s is not a DICOM file !" % step_id)
+    except IntegrityError:
+        print_db_except()
+        conn.db_session.rollback()
 
 
-def visit_info(folder, files_pattern=DEFAULT_FILES_PATTERN, db_url=None):
-    """
-    Get visit meta-data from DICOM files (participant ID and scan date)
-    :param folder: root folder
-    :param files_pattern: DICOM files pattern (default is '/**/MR.*')
-    :param db_url: DB URL, if not defined it will try to find an Airflow configuration file
-    :return: (participant_id, scan_date)
-    """
-    global conn
-    logging.info("Connecting to DB...")
-    conn = connection.Connection(db_url)
-    logging.info(os.path.join(folder, files_pattern))
-    for filename in glob.iglob(os.path.join(folder, files_pattern), recursive=True):
-        try:
-            logging.info("Processing '%s'" % filename)
-            ds = dicom.read_file(filename)
-
-            participant_id = ds.PatientID
-            scan_date = format_date(ds.StudyDate)
-
-            logging.info("Closing DB connection...")
-            conn.close()
-            return participant_id, scan_date
-
-        except AttributeError:
-            logging.warning("%s does not contain PatientID or StudyDate !" % filename)
-        except InvalidDicomError:
-            logging.warning("%s is not a DICOM file !" % filename)
-
-        except IntegrityError:
-            print_db_except()
-            conn.db_session.rollback()
-    logging.info("Closing DB connection...")
-    conn.close()
-
-
-##########################################################################
-# FUNCTIONS - UTILS
-##########################################################################
+########################################################################################################################
+# UTIL FUNCTIONS
+########################################################################################################################
 
 def format_date(date):
     return datetime.datetime(int(date[:4]), int(date[4:6]), int(date[6:8]))
 
 
 def format_gender(gender):
-    if gender == 'M':
+    if gender.lower() in MALE_GENDER_LIST:
         return 'male'
-    elif gender == 'F':
+    elif gender.lower() in FEMALE_GENDER_LIST:
         return 'female'
     else:
         return 'unknown'
@@ -141,50 +79,9 @@ def print_db_except():
     logging.warning("A rollback will be performed !")
 
 
-##########################################################################
-# FUNCTIONS - DATABASE
-##########################################################################
-
-
-def create_provenance(dataset):
-    provenance = conn.db_session.query(conn.Provenance).filter_by(dataset=dataset).first()
-
-    if not provenance:
-        provenance = conn.Provenance(dataset=dataset)
-        conn.db_session.add(provenance)
-        conn.db_session.commit()
-    return provenance.id
-
-
-def mark_processing_date(processing_step_id):
-    processing_step = conn.db_session.query(
-        conn.ProcessingStep).filter_by(id=processing_step_id).first()
-    processing_step.execution_date = datetime.datetime.now()
-    conn.db_session.commit()
-
-
-def get_previous_step(name):
-    if not name:
-        return None
-    processing_step = conn.db_session.query(
-        conn.ProcessingStep).filter_by(name=name).first()
-    return processing_step.id
-
-
-def create_processing_step(step_name, previous_step_name, provenance_id):
-    previous_step_id = get_previous_step(previous_step_name)
-    processing_step = conn.db_session.query(
-        conn.ProcessingStep).filter_by(name=step_name, previous_step_id=previous_step_id).first()
-
-    if not processing_step:
-        processing_step = conn.ProcessingStep(
-            name=step_name,
-            previous_step_id=previous_step_id,
-            provenance_id=provenance_id
-        )
-        conn.db_session.add(processing_step)
-        conn.db_session.commit()
-    return processing_step.id
+########################################################################################################################
+# EXTRACTION FUNCTION
+########################################################################################################################
 
 
 def extract_participant(ds, handedness):
@@ -463,7 +360,7 @@ def extract_repetition(ds, sequence_id):
                         "SeriesNumber")
 
 
-def extract_dicom(path, repetition_id, processing_step_id):
+def extract_dicom(path, file_type, repetition_id, processing_step_id):
     dcm = conn.db_session.query(conn.DataFile).filter_by(
         path=path, repetition_id=repetition_id).first()
 
@@ -471,7 +368,7 @@ def extract_dicom(path, repetition_id, processing_step_id):
         dcm = conn.DataFile(
             path=path,
             repetition_id=repetition_id,
-            type='dicom',
+            type=file_type,
             processing_step_id=processing_step_id
         )
         conn.db_session.add(dcm)
