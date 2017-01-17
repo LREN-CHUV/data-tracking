@@ -10,7 +10,6 @@ from . import connection
 from . import dicom_import
 from . import nifti_import
 from .lren_nifti_path_extractor import LRENNiftiPathExtractor
-from .ppmi_nifti_path_extractor import PPMINiftiPathExtractor
 
 
 ########################################################################################################################
@@ -131,14 +130,7 @@ def record_files(db_conn, folder, provenance_id, step_id):
     :param step_id: Step ID.
     :return:
     """
-    provenance_dataset = db_conn.db_session.query(db_conn.Provenance).filter_by(id=provenance_id).first().dataset
-
-    if "LREN" == provenance_dataset:
-        nifti_path_extractor = LRENNiftiPathExtractor
-    elif "PPMI" == provenance_dataset:
-        nifti_path_extractor = PPMINiftiPathExtractor
-    else:
-        nifti_path_extractor = None  # TODO: use a default one
+    nifti_path_extractor = LRENNiftiPathExtractor  # TODO: replace this to use BIDS
 
     for file_path in glob.iglob(os.path.join(folder, "**/*"), recursive=True):
         file_type = find_type(file_path)

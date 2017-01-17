@@ -3,6 +3,11 @@ from .nifti_path_extractor import NiftiPathExtractor
 
 
 class LRENNiftiPathExtractor(NiftiPathExtractor):
+    """
+    Implementation of NiftiPathExtractor that follows the LREN folder structure.
+    The LREN folder structure is as follow:
+    ParticipantID/Session/Sequence/Repetition/image.nii (where the filename can contain a prefix and a postfix)
+    """
     @staticmethod
     def extract_participant_id(file_path):
         return str(re.findall('/([^/]+?)/[^/]+?/[^/]+?/[^/]+?/[^/]+?\.nii', file_path)[0])
