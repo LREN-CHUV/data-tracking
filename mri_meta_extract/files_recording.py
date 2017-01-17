@@ -9,6 +9,8 @@ from nibabel import filebasedimages
 from . import connection
 from . import dicom_import
 from . import nifti_import
+from .lren_nifti_path_extractor import LRENNiftiPathExtractor
+from .ppmi_nifti_path_extractor import PPMINiftiPathExtractor
 
 
 ########################################################################################################################
@@ -41,10 +43,10 @@ def visit(folder, provenance_id, previous_step_id=None, db_url=None):
 
     if not previous_step_id:
         step_id = create_step(db_conn, ACQUISITION_STEP_NAME, provenance_id)
-        record_files(db_conn, folder, step_id)
+        record_files(db_conn, folder, provenance_id, step_id)
     else:
         step_id = create_step(db_conn, VISIT_STEP_NAME, provenance_id, previous_step_id)
-        visit_results(db_conn, folder, step_id)
+        visit_results(db_conn, folder, provenance_id, step_id)
 
     logging.info("Closing database connection...")
     db_conn.close()
@@ -129,12 +131,21 @@ def record_files(db_conn, folder, provenance_id, step_id):
     :param step_id: Step ID.
     :return:
     """
+    provenance_dataset = db_conn.db_session.query(db_conn.Provenance).filter_by(id=provenance_id).first().dataset
+
+    if "LREN" == provenance_dataset:
+        nifti_path_extractor = LRENNiftiPathExtractor
+    elif "PPMI" == provenance_dataset:
+        nifti_path_extractor = PPMINiftiPathExtractor
+    else:
+        nifti_path_extractor = None  # TODO: use a default one
+
     for file_path in glob.iglob(os.path.join(folder, "**/*"), recursive=True):
         file_type = find_type(file_path)
         if "DICOM" == file_type:
-            dicom_import.dicom2db(file_path, file_type, provenance_id, step_id, db_conn)
+            dicom_import.dicom2db(file_path, file_type, step_id, db_conn)
         elif "NIFTI" == file_type:
-            nifti_import.nifti2db(file_path, file_type, provenance_id, step_id, nifti_path_extractor, db_conn)
+            nifti_import.nifti2db(file_path, file_type, step_id, nifti_path_extractor, db_conn)
 
 
 def find_type(file_path):

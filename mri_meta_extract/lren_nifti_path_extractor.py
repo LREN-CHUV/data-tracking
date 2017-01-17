@@ -9,7 +9,7 @@ class LRENNiftiPathExtractor(NiftiPathExtractor):
 
     @staticmethod
     def extract_scan_date(file_path):
-        pass
+        return None
 
     @staticmethod
     def extract_session(file_path):
