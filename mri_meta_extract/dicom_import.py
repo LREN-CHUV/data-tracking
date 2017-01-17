@@ -25,12 +25,11 @@ conn = None
 # MAIN FUNCTIONS
 ########################################################################################################################
 
-def dicom2db(file_path, file_type, provenance_id, step_id, db_conn):
+def dicom2db(file_path, file_type, step_id, db_conn):
     """
     Extract some meta-data from a DICOM file and store in a DB.
     :param file_path: File path.
     :param file_type: File type (should be 'DICOM').
-    :param provenance_id: Provenance ID.
     :param step_id: Step ID
     :param db_conn: Database connection.
     :return:
@@ -367,8 +366,8 @@ def extract_dicom(path, file_type, repetition_id, processing_step_id):
     if not dcm:
         dcm = conn.DataFile(
             path=path,
-            repetition_id=repetition_id,
             type=file_type,
+            repetition_id=repetition_id,
             processing_step_id=processing_step_id
         )
         conn.db_session.add(dcm)

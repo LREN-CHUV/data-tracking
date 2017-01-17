@@ -41,10 +41,10 @@ def visit(folder, provenance_id, previous_step_id=None, db_url=None):
 
     if not previous_step_id:
         step_id = create_step(db_conn, ACQUISITION_STEP_NAME, provenance_id)
-        record_files(db_conn, folder, provenance_id, step_id)
+        record_files(db_conn, folder, step_id)
     else:
         step_id = create_step(db_conn, VISIT_STEP_NAME, provenance_id, previous_step_id)
-        visit_results(db_conn, folder, provenance_id, step_id)
+        visit_results(db_conn, folder, step_id)
 
     logging.info("Closing database connection...")
     db_conn.close()
@@ -134,7 +134,7 @@ def record_files(db_conn, folder, provenance_id, step_id):
         if "DICOM" == file_type:
             dicom_import.dicom2db(file_path, file_type, provenance_id, step_id, db_conn)
         elif "NIFTI" == file_type:
-            nifti_import.nifti2db('PR00001', datetime.date.today(), file_path, file_type, provenance_id, step_id, db_conn)
+            nifti_import.nifti2db(file_path, file_type, provenance_id, step_id, nifti_path_extractor, db_conn)
 
 
 def find_type(file_path):
