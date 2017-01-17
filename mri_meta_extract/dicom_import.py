@@ -281,7 +281,7 @@ def extract_sequence_type(ds):
     ).all()
 
     sequence_type_list = list(filter(lambda s: not (
-        s.slice_thickness != str(slice_thickness)
+        str(s.slice_thickness) != str(slice_thickness)
         or str(s.repetition_time) != str(repetition_time)
         or str(s.echo_time) != str(echo_time)
         or str(s.percent_phase_field_of_view) != str(percent_phase_field_of_view)
