@@ -42,10 +42,10 @@ def visit(folder, provenance_id, previous_step_id=None, db_url=None):
 
     if not previous_step_id:
         step_id = create_step(db_conn, ACQUISITION_STEP_NAME, provenance_id)
-        record_files(db_conn, folder, provenance_id, step_id)
+        record_files(db_conn, folder, step_id)
     else:
         step_id = create_step(db_conn, VISIT_STEP_NAME, provenance_id, previous_step_id)
-        visit_results(db_conn, folder, provenance_id, step_id)
+        visit_results(db_conn, folder, step_id)
 
     logging.info("Closing database connection...")
     db_conn.close()
@@ -121,12 +121,11 @@ def create_step(db_conn, name, provenance_id, previous_step_id=None):
     return step.id
 
 
-def record_files(db_conn, folder, provenance_id, step_id):
+def record_files(db_conn, folder, step_id):
     """
     Scan folder looking for files. Find type, meta-data, etc. Store all those data in a DB.
     :param db_conn: Database connection.
     :param folder: Folder to scan.
-    :param provenance_id: Provenance ID.
     :param step_id: Step ID.
     :return:
     """
@@ -164,7 +163,7 @@ def find_type(file_path):
     return "other"
 
 
-def visit_results(db_conn, folder, provenance_id, step_id):
+def visit_results(db_conn, folder, step_id):
     """
     TODO
     :param db_conn:
