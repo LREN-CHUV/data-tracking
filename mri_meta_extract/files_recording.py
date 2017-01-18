@@ -2,6 +2,7 @@ import datetime
 import glob
 import logging
 import os
+import hashlib
 import magic  # python-magic
 import nibabel
 from nibabel import filebasedimages
@@ -16,20 +17,20 @@ from .lren_nifti_path_extractor import LRENNiftiPathExtractor
 # SETTINGS
 ########################################################################################################################
 
-ACQUISITION_STEP_NAME = 'acquisition'
-VISIT_STEP_NAME = 'visit'
+HASH_BLOCK_SIZE = 65536  # Avoid getting out of memory when hashing big files
 
 
 ########################################################################################################################
 # MAIN FUNCTIONS
 ########################################################################################################################
 
-def visit(folder, provenance_id, previous_step_id=None, db_url=None):
+def visit(step_name, folder, provenance_id, previous_step_id=None, db_url=None):
     """
     Record all files from a folder into the database.
-    The files are listed in the DB. If a file has been copied from previous step without any transformation, it will be
-    detected and marked in the DB. The type of file will be detected and stored in the DB. If a files (e.g. a DICOM
+    If a file has been copied from a previous processing step without any transformation, it will be detected and marked
+    in the DB. The type of file will be detected and stored in the DB (NIFTI, DICOM, ...). If a files (e.g. a DICOM
     file) contains some meta-data, those will be stored in the DB.
+    :param step_name: Name of the processing step that produced the folder to visit.
     :param folder: folder path.
     :param provenance_id: provenance label.
     :param previous_step_id: (optional) previous processing step ID. If not defined, we assume this is the first
@@ -40,12 +41,21 @@ def visit(folder, provenance_id, previous_step_id=None, db_url=None):
     logging.info("Connecting to database...")
     db_conn = connection.Connection(db_url)
 
-    if not previous_step_id:
-        step_id = create_step(db_conn, ACQUISITION_STEP_NAME, provenance_id)
-        record_files(db_conn, folder, step_id)
-    else:
-        step_id = create_step(db_conn, VISIT_STEP_NAME, provenance_id, previous_step_id)
-        visit_results(db_conn, folder, step_id)
+    step_id = create_step(db_conn, step_name, provenance_id, previous_step_id)
+
+    previous_files_hash = get_files_hash_from_step(db_conn, previous_step_id)
+    nifti_path_extractor = LRENNiftiPathExtractor  # TODO: replace this to use BIDS
+
+    for file_path in glob.iglob(os.path.join(folder, "**/*"), recursive=True):
+        file_type = find_type(file_path)
+        if "DICOM" == file_type:
+            is_copy = hash_file(file_path) in previous_files_hash
+            logging.info(is_copy)
+            dicom_import.dicom2db(file_path, file_type, step_id, db_conn)
+        elif "NIFTI" == file_type:
+            is_copy = hash_file(file_path) in previous_files_hash
+            logging.info(is_copy)
+            nifti_import.nifti2db(file_path, file_type, step_id, nifti_path_extractor, db_conn)
 
     logging.info("Closing database connection...")
     db_conn.close()
@@ -121,21 +131,25 @@ def create_step(db_conn, name, provenance_id, previous_step_id=None):
     return step.id
 
 
-def record_files(db_conn, folder, step_id):
+def record_files(db_conn, folder, step_id, previous_step_id=None):
     """
     Scan folder looking for files. Find type, meta-data, etc. Store all those data in a DB.
     :param db_conn: Database connection.
     :param folder: Folder to scan.
     :param step_id: Step ID.
+    :param previous_step_id: (optional) Previous step ID.
     :return:
     """
+    previous_files_hash = get_files_hash_from_step(db_conn, previous_step_id)
     nifti_path_extractor = LRENNiftiPathExtractor  # TODO: replace this to use BIDS
 
     for file_path in glob.iglob(os.path.join(folder, "**/*"), recursive=True):
         file_type = find_type(file_path)
         if "DICOM" == file_type:
+            is_copy = hash_file(file_path) in previous_files_hash
             dicom_import.dicom2db(file_path, file_type, step_id, db_conn)
         elif "NIFTI" == file_type:
+            is_copy = hash_file(file_path) in previous_files_hash
             nifti_import.nifti2db(file_path, file_type, step_id, nifti_path_extractor, db_conn)
 
 
@@ -163,13 +177,16 @@ def find_type(file_path):
     return "other"
 
 
-def visit_results(db_conn, folder, step_id):
-    """
-    TODO
-    :param db_conn:
-    :param folder:
-    :param provenance_id:
-    :param step_id:
-    :return:
-    """
-    pass
+def get_files_hash_from_step(db_conn, step_id):
+    files = db_conn.db_session.query(db_conn.DataFile).filter_by(processing_step_id=step_id).all()
+    return [hash_file(file.path) for file in files]
+
+
+def hash_file(filename):
+    hasher = hashlib.sha1()
+    with open(filename, 'rb') as f:
+        buf = f.read(HASH_BLOCK_SIZE)
+        while len(buf) > 0:
+            hasher.update(buf)
+            buf = f.read(HASH_BLOCK_SIZE)
+    return hasher.hexdigest()
