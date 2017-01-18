@@ -1,4 +1,5 @@
 # coding: utf-8
+from sqlalchemy import Boolean
 from sqlalchemy import Column, Date, Enum, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
@@ -56,6 +57,7 @@ class DataFile(Base):
     type = Column(Text, nullable=False)
     result_type = Column(String(255), nullable=True)
     output_type = Column(String(255), nullable=True)
+    is_copy = Column(Boolean, nullable=True)
 
     repetition = relationship('Repetition')
     processing_step = relationship('ProcessingStep')

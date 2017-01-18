@@ -15,7 +15,7 @@ conn = None
 # FUNCTIONS - NIFTI
 ########################################################################################################################
 
-def nifti2db(file_path, file_type, step_id, nifti_path_extractor, db_conn):
+def nifti2db(file_path, file_type, is_copy, step_id, nifti_path_extractor, db_conn):
     global conn
     conn = db_conn
     logging.info("Processing '%s'" % file_path)
@@ -29,6 +29,7 @@ def nifti2db(file_path, file_type, step_id, nifti_path_extractor, db_conn):
         nifti_path_extractor.extract_postfix_type(file_path),
         file_path,
         file_type,
+        is_copy,
         step_id
     )
 
@@ -58,6 +59,7 @@ def save_nifti_meta(
         postfix_type,
         file_path,
         file_type,
+        is_copy,
         processing_step_id
 ):
     if not conn.db_session.query(conn.DataFile).filter_by(path=file_path).first():
@@ -97,6 +99,7 @@ def save_nifti_meta(
                         nii = conn.DataFile(
                             path=file_path,
                             type=file_type,
+                            is_copy=is_copy,
                             repetition_id=repetition_id,
                             processing_step_id=processing_step_id,
                             result_type=prefix_type,

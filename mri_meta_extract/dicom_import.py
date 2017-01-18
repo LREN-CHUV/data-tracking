@@ -25,7 +25,7 @@ conn = None
 # MAIN FUNCTIONS
 ########################################################################################################################
 
-def dicom2db(file_path, file_type, step_id, db_conn):
+def dicom2db(file_path, file_type, is_copy, step_id, db_conn):
     """
     Extract some meta-data from a DICOM file and store in a DB.
     :param file_path: File path.
@@ -46,7 +46,7 @@ def dicom2db(file_path, file_type, step_id, db_conn):
         sequence_type_id = extract_sequence_type(ds)
         sequence_id = extract_sequence(session_id, sequence_type_id)
         repetition_id = extract_repetition(ds, sequence_id)
-        extract_dicom(file_path, file_type, repetition_id, step_id)
+        extract_dicom(file_path, file_type, is_copy, repetition_id, step_id)
     except InvalidDicomError:
         logging.warning("%s is not a DICOM file !" % step_id)
     except IntegrityError:
@@ -359,7 +359,7 @@ def extract_repetition(ds, sequence_id):
                         "SeriesNumber")
 
 
-def extract_dicom(path, file_type, repetition_id, processing_step_id):
+def extract_dicom(path, file_type, is_copy, repetition_id, processing_step_id):
     dcm = conn.db_session.query(conn.DataFile).filter_by(
         path=path, repetition_id=repetition_id).first()
 
@@ -368,7 +368,8 @@ def extract_dicom(path, file_type, repetition_id, processing_step_id):
             path=path,
             type=file_type,
             repetition_id=repetition_id,
-            processing_step_id=processing_step_id
+            processing_step_id=processing_step_id,
+            is_copy=is_copy
         )
         conn.db_session.add(dcm)
         conn.db_session.commit()

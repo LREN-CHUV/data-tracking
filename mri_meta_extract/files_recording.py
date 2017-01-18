@@ -50,12 +50,10 @@ def visit(step_name, folder, provenance_id, previous_step_id=None, db_url=None):
         file_type = find_type(file_path)
         if "DICOM" == file_type:
             is_copy = hash_file(file_path) in previous_files_hash
-            logging.info(is_copy)
-            dicom_import.dicom2db(file_path, file_type, step_id, db_conn)
+            dicom_import.dicom2db(file_path, file_type, is_copy, step_id, db_conn)
         elif "NIFTI" == file_type:
             is_copy = hash_file(file_path) in previous_files_hash
-            logging.info(is_copy)
-            nifti_import.nifti2db(file_path, file_type, step_id, nifti_path_extractor, db_conn)
+            nifti_import.nifti2db(file_path, file_type, is_copy, step_id, nifti_path_extractor, db_conn)
 
     logging.info("Closing database connection...")
     db_conn.close()
