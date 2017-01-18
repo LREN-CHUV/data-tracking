@@ -113,7 +113,10 @@ def visit_info(folder, files_pattern='**/MR.*', db_url=None):
 ##########################################################################
 
 def format_date(date):
-    return datetime.datetime(int(date[:4]), int(date[4:6]), int(date[6:8]))
+    try:
+        return datetime.datetime(int(date[:4]), int(date[4:6]), int(date[6:8]))
+    except ValueError:
+        return None
 
 
 def format_gender(gender):
@@ -248,7 +251,7 @@ def extract_sequence_type(ds):
         repetition_time = None
     try:
         echo_time = float(ds.EchoTime)
-    except AttributeError:
+    except (AttributeError, ValueError):
         logging.warning("Field EchoTime does not exist")
         echo_time = None
     try:
