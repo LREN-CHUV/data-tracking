@@ -253,12 +253,12 @@ def extract_sequence_type(ds):
         pixel_spacing = None
     try:
         pixel_spacing_0 = float(pixel_spacing[0])
-    except (AttributeError, ValueError):
+    except (AttributeError, ValueError, TypeError):
         logging.warning("Field pixel_spacing0 does not exist")
         pixel_spacing_0 = None
     try:
         pixel_spacing_1 = float(pixel_spacing[1])
-    except (AttributeError, ValueError):
+    except (AttributeError, ValueError, TypeError):
         logging.warning("Field pixel_spacing1 does not exist")
         pixel_spacing_1 = None
     try:
