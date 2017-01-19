@@ -40,7 +40,7 @@ class ProcessingStep(Base):
     id = Column(Integer, primary_key=True, nullable=False)
     previous_step_id = Column(ForeignKey('processing_step.id'), nullable=True, index=True)
     provenance_id = Column(ForeignKey('provenance.id'), nullable=False, index=True)
-    name = Column(Text, nullable=False, unique=True)
+    name = Column(Text, nullable=False)
     execution_date = Column(Date, nullable=True)
 
     processing_step = relationship('ProcessingStep')
