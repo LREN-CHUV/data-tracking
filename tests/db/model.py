@@ -151,9 +151,9 @@ class SequenceType(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(255), nullable=False)
-    manufacturer = Column(String(255), nullable=False)
-    manufacturer_model_name = Column(String(255), nullable=False)
-    institution_name = Column(String(255), nullable=False)
+    manufacturer = Column(String(255), nullable=True)
+    manufacturer_model_name = Column(String(255), nullable=True)
+    institution_name = Column(String(255), nullable=True)
     slice_thickness = Column(Float, nullable=True)
     repetition_time = Column(Float, nullable=True)
     echo_time = Column(Float, nullable=True)

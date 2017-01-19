@@ -169,7 +169,7 @@ def extract_sequence_type(ds):
     try:
         sequence_name = ds.ProtocolName
     except AttributeError:
-        logging.warning("Cannot create sequence_type because ProtocolName field is missing")
+        logging.warning("Field ProtocolName does not exist")
         sequence_name = 'unknown'
     try:
         manufacturer = ds.Manufacturer
@@ -264,10 +264,12 @@ def extract_sequence_type(ds):
     try:
         echo_number = int(ds.EchoNumber)
     except (AttributeError, ValueError):
+        logging.warning("Field echo_number does not exist")
         echo_number = None
     try:
         space_between_slices = float(ds[0x0018, 0x0088].value)
-    except KeyError:
+    except (AttributeError, ValueError, KeyError):
+        logging.warning("Field space_between_slices does not exist")
         space_between_slices = None
 
     sequence_type_list = conn.db_session.query(conn.SequenceType).filter_by(
