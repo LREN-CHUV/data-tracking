@@ -90,7 +90,7 @@ def visit_info(folder, files_pattern='**/MR.*', db_url=None):
             ds = dicom.read_file(filename)
 
             participant_id = ds.PatientID
-            scan_date = format_date(ds.StudyDate)
+            scan_date = format_date(ds.SeriesDate)
 
             logging.info("Closing DB connection...")
             conn.close()
@@ -176,7 +176,7 @@ def extract_participant(ds, handedness):
 
 def extract_scan(ds, participant_id, role, comment):
     try:
-        scan_date = format_date(ds.StudyDate)
+        scan_date = format_date(ds.SeriesDate)
 
         scan = conn.db_session.query(conn.Scan).filter_by(
             participant_id=participant_id, date=scan_date).first()
