@@ -37,11 +37,11 @@ def dicom2db(file_path, file_type, is_copy, step_id, db_conn):
     :param file_type: File type (should be 'DICOM').
     :param step_id: Step ID
     :param db_conn: Database connection.
-    :return:
+    :return: A dictionary containing the following IDs : participant_id, scan_id, session_id, sequence_type_id,
+    sequence_id, repetition_id, file_id.
     """
     global conn
     conn = db_conn
-    logging.info("Processing '%s'" % file_path)
     try:
         logging.info("Extracting DICOM headers from '%s'" % file_path)
         ds = dicom.read_file(file_path)
@@ -51,7 +51,10 @@ def dicom2db(file_path, file_type, is_copy, step_id, db_conn):
         sequence_type_id = extract_sequence_type(ds)
         sequence_id = extract_sequence(session_id, sequence_type_id)
         repetition_id = extract_repetition(ds, sequence_id)
-        extract_dicom(file_path, file_type, is_copy, repetition_id, step_id)
+        file_id = extract_dicom(file_path, file_type, is_copy, repetition_id, step_id)
+        return {'participant_id': participant_id, 'scan_id': scan_id, 'session_id': session_id,
+                'sequence_type_id': sequence_type_id, 'sequence_id': sequence_id, 'repetition_id': repetition_id,
+                'file_id': file_id}
     except InvalidDicomError:
         logging.warning("%s is not a DICOM file !" % step_id)
     except IntegrityError:

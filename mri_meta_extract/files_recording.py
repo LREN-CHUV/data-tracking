@@ -24,7 +24,7 @@ HASH_BLOCK_SIZE = 65536  # Avoid getting out of memory when hashing big files
 # MAIN FUNCTIONS
 ########################################################################################################################
 
-def visit(step_name, folder, provenance_id, previous_step_id=None, db_url=None):
+def visit(step_name, folder, provenance_id, previous_step_id=None, boost=True, db_url=None):
     """
     Record all files from a folder into the database.
     If a file has been copied from a previous processing step without any transformation, it will be detected and marked
@@ -35,6 +35,8 @@ def visit(step_name, folder, provenance_id, previous_step_id=None, db_url=None):
     :param provenance_id: provenance label.
     :param previous_step_id: (optional) previous processing step ID. If not defined, we assume this is the first
     processing step.
+    :param boost: (optional) When enabled, we consider that all the files from a same folder share the same meta-data.
+    When enabled, the processing is much faster. This option is enabled by default.
     :param db_url: (optional) Database URL. If not defined, it looks for an Airflow configuration file.
     :return: return processing step ID.
     """
@@ -46,11 +48,18 @@ def visit(step_name, folder, provenance_id, previous_step_id=None, db_url=None):
     previous_files_hash = get_files_hash_from_step(db_conn, previous_step_id)
     nifti_path_extractor = LRENNiftiPathExtractor  # TODO: replace this to use BIDS
 
+    checked = dict()
     for file_path in glob.iglob(os.path.join(folder, "**/*"), recursive=True):
+        logging.debug("Processing '%s'" % file_path)
         file_type = find_type(file_path)
         if "DICOM" == file_type:
             is_copy = hash_file(file_path) in previous_files_hash
-            dicom_import.dicom2db(file_path, file_type, is_copy, step_id, db_conn)
+            leaf_folder = os.path.split(file_path)[0]
+            if leaf_folder not in checked or not boost:
+                ret = dicom_import.dicom2db(file_path, file_type, is_copy, step_id, db_conn)
+                checked[leaf_folder] = ret['repetition_id']
+            else:
+                dicom_import.extract_dicom(file_path, file_type, is_copy, checked[leaf_folder], step_id)
         elif "NIFTI" == file_type:
             is_copy = hash_file(file_path) in previous_files_hash
             nifti_import.nifti2db(file_path, file_type, is_copy, step_id, nifti_path_extractor, db_conn)
