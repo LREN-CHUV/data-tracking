@@ -222,105 +222,107 @@ def extract_sequence_type(ds):
     try:
         sequence_name = ds.ProtocolName
     except AttributeError:
-        logging.warning("Cannot create sequence_type because ProtocolName field is missing")
+        logging.debug("Field ProtocolName was not found")
         sequence_name = 'unknown'
     try:
         manufacturer = ds.Manufacturer
     except AttributeError:
-        logging.warning("Field Manufacturer does not exist")
+        logging.debug("Field Manufacturer was not found")
         manufacturer = 'unknown'
     try:
         manufacturer_model_name = ds.ManufacturerModelName
     except AttributeError:
-        logging.warning("Field ManufacturerModelName does not exist")
+        logging.debug("Field ManufacturerModelName was not found")
         manufacturer_model_name = 'unknown'
     try:
         institution_name = ds.InstitutionName
     except AttributeError:
-        logging.warning("Field InstitutionName does not exist")
+        logging.debug("Field InstitutionName was not found")
         institution_name = 'unknown'
     try:
         slice_thickness = float(ds.SliceThickness)
-    except AttributeError:
-        logging.warning("Field SliceThickness does not exist")
+    except (AttributeError, ValueError):
+        logging.debug("Field SliceThickness was not found")
         slice_thickness = None
     try:
         repetition_time = float(ds.RepetitionTime)
-    except AttributeError:
-        logging.warning("Field RepetitionTime does not exist")
+    except (AttributeError, ValueError):
+        logging.debug("Field RepetitionTime was not found")
         repetition_time = None
     try:
         echo_time = float(ds.EchoTime)
     except (AttributeError, ValueError):
-        logging.warning("Field EchoTime does not exist")
+        logging.debug("Field EchoTime was not found")
         echo_time = None
     try:
         number_of_phase_encoding_steps = int(ds.NumberOfPhaseEncodingSteps)
-    except AttributeError:
-        logging.warning("Field NumberOfPhaseEncodingSteps does not exist")
+    except (AttributeError, ValueError):
+        logging.debug("Field NumberOfPhaseEncodingSteps was not found")
         number_of_phase_encoding_steps = None
     try:
         percent_phase_field_of_view = float(ds.PercentPhaseFieldOfView)
-    except AttributeError:
-        logging.warning("Field PercentPhaseFieldOfView does not exist")
+    except (AttributeError, ValueError):
+        logging.debug("Field PercentPhaseFieldOfView was not found")
         percent_phase_field_of_view = None
     try:
         pixel_bandwidth = int(ds.PixelBandwidth)
-    except AttributeError:
-        logging.warning("Field PixelBandwidth does not exist")
+    except (AttributeError, ValueError):
+        logging.debug("Field PixelBandwidth was not found")
         pixel_bandwidth = None
     try:
         flip_angle = float(ds.FlipAngle)
-    except AttributeError:
-        logging.warning("Field FlipAngle does not exist")
+    except (AttributeError, ValueError):
+        logging.debug("Field FlipAngle was not found")
         flip_angle = None
     try:
         rows = int(ds.Rows)
-    except AttributeError:
-        logging.warning("Field Rows does not exist")
+    except (AttributeError, ValueError):
+        logging.debug("Field Rows was not found")
         rows = None
     try:
         columns = int(ds.Columns)
-    except AttributeError:
-        logging.warning("Field Columns does not exist")
+    except (AttributeError, ValueError):
+        logging.debug("Field Columns was not found")
         columns = None
     try:
         magnetic_field_strength = float(ds.MagneticFieldStrength)
-    except AttributeError:
-        logging.warning("Field MagneticFieldStrength does not exist")
+    except (AttributeError, ValueError):
+        logging.debug("Field MagneticFieldStrength was not found")
         magnetic_field_strength = None
     try:
         echo_train_length = int(ds.EchoTrainLength)
-    except AttributeError:
-        logging.warning("Field EchoTrainLength does not exist")
+    except (AttributeError, ValueError):
+        logging.debug("Field EchoTrainLength was not found")
         echo_train_length = None
     try:
         percent_sampling = float(ds.PercentSampling)
-    except AttributeError:
-        logging.warning("Field PercentSampling does not exist")
+    except (AttributeError, ValueError):
+        logging.debug("Field PercentSampling was not found")
         percent_sampling = None
     try:
         pixel_spacing = ds.PixelSpacing
     except AttributeError:
-        logging.warning("Field PixelSpacing does not exist")
+        logging.debug("Field PixelSpacing was not found")
         pixel_spacing = None
     try:
         pixel_spacing_0 = float(pixel_spacing[0])
-    except AttributeError:
-        logging.warning("Field pixel_spacing0 does not exist")
+    except (AttributeError, ValueError, TypeError):
+        logging.debug("Field pixel_spacing0 was not found")
         pixel_spacing_0 = None
     try:
         pixel_spacing_1 = float(pixel_spacing[1])
-    except AttributeError:
-        logging.warning("Field pixel_spacing1 does not exist")
+    except (AttributeError, ValueError, TypeError):
+        logging.debug("Field pixel_spacing1 was not found")
         pixel_spacing_1 = None
     try:
         echo_number = int(ds.EchoNumber)
-    except AttributeError:
+    except (AttributeError, ValueError):
+        logging.debug("Field echo_number was not found")
         echo_number = None
     try:
         space_between_slices = float(ds[0x0018, 0x0088].value)
-    except KeyError:
+    except (AttributeError, ValueError, KeyError):
+        logging.debug("Field space_between_slices was not found")
         space_between_slices = None
 
     sequence_type_list = conn.db_session.query(conn.SequenceType).filter_by(
