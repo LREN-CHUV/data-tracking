@@ -36,7 +36,7 @@ def visit(step_name, folder, provenance_id, previous_step_id=None, boost=True, d
     :param previous_step_id: (optional) previous processing step ID. If not defined, we assume this is the first
     processing step.
     :param boost: (optional) When enabled, we consider that all the files from a same folder share the same meta-data.
-    When enabled, the processing is much faster. This option is enabled by default.
+    When enabled, the processing is (about 2 times) faster. This option is enabled by default.
     :param db_url: (optional) Database URL. If not defined, it looks for an Airflow configuration file.
     :return: return processing step ID.
     """
