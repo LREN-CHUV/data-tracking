@@ -14,7 +14,7 @@ class LRENNiftiPathExtractor(NiftiPathExtractor):
 
     @staticmethod
     def extract_scan_date(file_path):
-        return None
+        return None  # Will be fixed when using BIDS
 
     @staticmethod
     def extract_session(file_path):

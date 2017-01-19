@@ -12,11 +12,16 @@ from dicom.errors import InvalidDicomError
 
 DEFAULT_HANDEDNESS = 'unknown'
 DEFAULT_ROLE = 'U'
-DEFAULT_COMMENT = ''
 DEFAULT_GENDER = 'unknown'
+DEFAULT_PARTICIPANT_ID = 'unknown'
+DEFAULT_COMMENT = ''
+DEFAULT_SESSION_VALUE = 'unknown'
+DEFAULT_REPETITION = 0
 
 MALE_GENDER_LIST = ['m', 'male', 'man', 'boy']
 FEMALE_GENDER_LIST = ['f', 'female', 'woman', 'girl']
+MALE = 'male'
+FEMALE = 'female'
 
 conn = None
 
@@ -50,7 +55,7 @@ def dicom2db(file_path, file_type, is_copy, step_id, db_conn):
     except InvalidDicomError:
         logging.warning("%s is not a DICOM file !" % step_id)
     except IntegrityError:
-        print_db_except()
+        logging.warning("A problem occurred with the DB ! A rollback will be performed...")
         conn.db_session.rollback()
 
 
@@ -62,23 +67,16 @@ def format_date(date):
     try:
         return datetime.datetime(int(date[:4]), int(date[4:6]), int(date[6:8]))
     except ValueError:
-        logging.warning("Cannot parse date "+str(date))
+        logging.warning("Cannot parse date from : "+str(date))
 
 
 def format_gender(gender):
     if gender.lower() in MALE_GENDER_LIST:
-        return 'male'
+        return MALE
     elif gender.lower() in FEMALE_GENDER_LIST:
-        return 'female'
+        return FEMALE
     else:
-        return 'unknown'
-
-
-def print_db_except():
-    logging.warning("A problem occurred while trying to insert data into DB.")
-    logging.warning(
-        "This can be caused by a duplicate entry on a unique field.")
-    logging.warning("A rollback will be performed !")
+        return DEFAULT_GENDER
 
 
 ########################################################################################################################
@@ -89,35 +87,34 @@ def print_db_except():
 def extract_participant(ds, handedness):
     try:
         participant_id = ds.PatientID
-
-        try:
-            participant_birth_date = format_date(ds.PatientBirthDate)
-        except AttributeError:
-            logging.warning("Birth date is unknown")
-            participant_birth_date = None
-        try:
-            participant_gender = format_gender(ds.PatientSex)
-        except AttributeError:
-            logging.warning("Gender is unknown")
-            participant_gender = DEFAULT_GENDER
-
-        participant = conn.db_session.query(
-            conn.Participant).filter_by(id=participant_id).first()
-
-        if not participant:
-            participant = conn.Participant(
-                id=participant_id,
-                gender=participant_gender,
-                handedness=handedness,
-                birthdate=participant_birth_date
-            )
-            conn.db_session.add(participant)
-            conn.db_session.commit()
-
-        return participant.id
     except AttributeError:
-        logging.warning("Cannot create participant because some of those fields are missing : "
-                        "PatientID")
+        logging.warning("Patient ID was not found !")
+        participant_id = DEFAULT_PARTICIPANT_ID
+    try:
+        participant_birth_date = format_date(ds.PatientBirthDate)
+    except AttributeError:
+        logging.debug("Field PatientBirthDate was not found")
+        participant_birth_date = None
+    try:
+        participant_gender = format_gender(ds.PatientSex)
+    except AttributeError:
+        logging.debug("Field PatientSex was not found")
+        participant_gender = DEFAULT_GENDER
+
+    participant = conn.db_session.query(
+        conn.Participant).filter_by(id=participant_id).first()
+
+    if not participant:
+        participant = conn.Participant(
+            id=participant_id,
+            gender=participant_gender,
+            handedness=handedness,
+            birthdate=participant_birth_date
+        )
+        conn.db_session.add(participant)
+        conn.db_session.commit()
+
+    return participant.id
 
 
 def extract_scan(ds, participant_id, role, comment):
@@ -147,129 +144,129 @@ def extract_scan(ds, participant_id, role, comment):
 def extract_session(ds, scan_id):
     try:
         session_value = str(ds.StudyID)
-
-        session = conn.db_session.query(conn.Session).filter_by(
-            scan_id=scan_id, value=session_value).first()
-
-        if not session:
-            session = conn.Session(
-                scan_id=scan_id,
-                value=session_value
-            )
-            conn.db_session.add(session)
-            conn.db_session.commit()
-
-        return session.id
     except AttributeError:
-        logging.warning("Cannot create session because some of those fields are missing : "
-                        "StudyID")
+        logging.debug("Field StudyID was not found")
+        session_value = DEFAULT_SESSION_VALUE
+
+    session = conn.db_session.query(conn.Session).filter_by(
+        scan_id=scan_id, value=session_value).first()
+
+    if not session:
+        session = conn.Session(
+            scan_id=scan_id,
+            value=session_value
+        )
+        conn.db_session.add(session)
+        conn.db_session.commit()
+
+    return session.id
 
 
 def extract_sequence_type(ds):
     try:
         sequence_name = ds.ProtocolName
     except AttributeError:
-        logging.warning("Field ProtocolName does not exist")
+        logging.debug("Field ProtocolName was not found")
         sequence_name = 'unknown'
     try:
         manufacturer = ds.Manufacturer
     except AttributeError:
-        logging.warning("Field Manufacturer does not exist")
+        logging.debug("Field Manufacturer was not found")
         manufacturer = 'unknown'
     try:
         manufacturer_model_name = ds.ManufacturerModelName
     except AttributeError:
-        logging.warning("Field ManufacturerModelName does not exist")
+        logging.debug("Field ManufacturerModelName was not found")
         manufacturer_model_name = 'unknown'
     try:
         institution_name = ds.InstitutionName
     except AttributeError:
-        logging.warning("Field InstitutionName does not exist")
+        logging.debug("Field InstitutionName was not found")
         institution_name = 'unknown'
     try:
         slice_thickness = float(ds.SliceThickness)
     except (AttributeError, ValueError):
-        logging.warning("Field SliceThickness does not exist")
+        logging.debug("Field SliceThickness was not found")
         slice_thickness = None
     try:
         repetition_time = float(ds.RepetitionTime)
     except (AttributeError, ValueError):
-        logging.warning("Field RepetitionTime does not exist")
+        logging.debug("Field RepetitionTime was not found")
         repetition_time = None
     try:
         echo_time = float(ds.EchoTime)
     except (AttributeError, ValueError):
-        logging.warning("Field EchoTime does not exist")
+        logging.debug("Field EchoTime was not found")
         echo_time = None
     try:
         number_of_phase_encoding_steps = int(ds.NumberOfPhaseEncodingSteps)
     except (AttributeError, ValueError):
-        logging.warning("Field NumberOfPhaseEncodingSteps does not exist")
+        logging.debug("Field NumberOfPhaseEncodingSteps was not found")
         number_of_phase_encoding_steps = None
     try:
         percent_phase_field_of_view = float(ds.PercentPhaseFieldOfView)
     except (AttributeError, ValueError):
-        logging.warning("Field PercentPhaseFieldOfView does not exist")
+        logging.debug("Field PercentPhaseFieldOfView was not found")
         percent_phase_field_of_view = None
     try:
         pixel_bandwidth = int(ds.PixelBandwidth)
     except (AttributeError, ValueError):
-        logging.warning("Field PixelBandwidth does not exist")
+        logging.debug("Field PixelBandwidth was not found")
         pixel_bandwidth = None
     try:
         flip_angle = float(ds.FlipAngle)
     except (AttributeError, ValueError):
-        logging.warning("Field FlipAngle does not exist")
+        logging.debug("Field FlipAngle was not found")
         flip_angle = None
     try:
         rows = int(ds.Rows)
     except (AttributeError, ValueError):
-        logging.warning("Field Rows does not exist")
+        logging.debug("Field Rows was not found")
         rows = None
     try:
         columns = int(ds.Columns)
     except (AttributeError, ValueError):
-        logging.warning("Field Columns does not exist")
+        logging.debug("Field Columns was not found")
         columns = None
     try:
         magnetic_field_strength = float(ds.MagneticFieldStrength)
     except (AttributeError, ValueError):
-        logging.warning("Field MagneticFieldStrength does not exist")
+        logging.debug("Field MagneticFieldStrength was not found")
         magnetic_field_strength = None
     try:
         echo_train_length = int(ds.EchoTrainLength)
     except (AttributeError, ValueError):
-        logging.warning("Field EchoTrainLength does not exist")
+        logging.debug("Field EchoTrainLength was not found")
         echo_train_length = None
     try:
         percent_sampling = float(ds.PercentSampling)
     except (AttributeError, ValueError):
-        logging.warning("Field PercentSampling does not exist")
+        logging.debug("Field PercentSampling was not found")
         percent_sampling = None
     try:
         pixel_spacing = ds.PixelSpacing
     except AttributeError:
-        logging.warning("Field PixelSpacing does not exist")
+        logging.debug("Field PixelSpacing was not found")
         pixel_spacing = None
     try:
         pixel_spacing_0 = float(pixel_spacing[0])
     except (AttributeError, ValueError, TypeError):
-        logging.warning("Field pixel_spacing0 does not exist")
+        logging.debug("Field pixel_spacing0 was not found")
         pixel_spacing_0 = None
     try:
         pixel_spacing_1 = float(pixel_spacing[1])
     except (AttributeError, ValueError, TypeError):
-        logging.warning("Field pixel_spacing1 does not exist")
+        logging.debug("Field pixel_spacing1 was not found")
         pixel_spacing_1 = None
     try:
         echo_number = int(ds.EchoNumber)
     except (AttributeError, ValueError):
-        logging.warning("Field echo_number does not exist")
+        logging.debug("Field echo_number was not found")
         echo_number = None
     try:
         space_between_slices = float(ds[0x0018, 0x0088].value)
     except (AttributeError, ValueError, KeyError):
-        logging.warning("Field space_between_slices does not exist")
+        logging.debug("Field space_between_slices was not found")
         space_between_slices = None
 
     sequence_type_list = conn.db_session.query(conn.SequenceType).filter_by(
@@ -348,21 +345,22 @@ def extract_sequence(session_id, sequence_type_id):
 def extract_repetition(ds, sequence_id):
     try:
         repetition_value = int(ds.SeriesNumber)
-        repetition = conn.db_session.query(conn.Repetition).filter_by(
-            sequence_id=sequence_id, value=repetition_value).first()
-
-        if not repetition:
-            repetition = conn.Repetition(
-                sequence_id=sequence_id,
-                value=repetition_value
-            )
-            conn.db_session.add(repetition)
-            conn.db_session.commit()
-
-        return repetition.id
     except AttributeError:
-        logging.warning("Cannot create repetition because some of those fields are missing : "
-                        "SeriesNumber")
+        logging.warning("Field SeriesNumber was not found")
+        repetition_value = DEFAULT_REPETITION
+
+    repetition = conn.db_session.query(conn.Repetition).filter_by(
+        sequence_id=sequence_id, value=repetition_value).first()
+
+    if not repetition:
+        repetition = conn.Repetition(
+            sequence_id=sequence_id,
+            value=repetition_value
+        )
+        conn.db_session.add(repetition)
+        conn.db_session.commit()
+
+    return repetition.id
 
 
 def extract_dicom(path, file_type, is_copy, repetition_id, processing_step_id):

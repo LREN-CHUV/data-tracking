@@ -1,7 +1,7 @@
 import logging
 import re
 
-from datetime import date, datetime
+from datetime import date
 
 
 ########################################################################################################################
@@ -69,8 +69,9 @@ def save_nifti_meta(
         else:
             scan = guess_scan(participant_id)
             if not scan:
-                logging.warning("Cannot record file : "+file_path)
+                logging.warning("Cannot record file : " + file_path + " ! Cannot find scan date...")
                 return
+
         sequence_type_list = conn.db_session.query(conn.SequenceType).filter_by(name=sequence).all()
 
         if scan and len(sequence_type_list) > 0:
@@ -113,5 +114,5 @@ def guess_scan(participant_id):
     scans = conn.db_session.query(conn.Scan).filter_by(participant_id=participant_id).all()
     if len(scans) == 1:
         return scans[0]
-    logging.warning("Cannot guess scan date !")
+    logging.debug("Cannot guess scan date !")
     return None
