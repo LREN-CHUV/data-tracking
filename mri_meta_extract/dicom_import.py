@@ -59,7 +59,10 @@ def dicom2db(file_path, file_type, is_copy, step_id, db_conn):
 ########################################################################################################################
 
 def format_date(date):
-    return datetime.datetime(int(date[:4]), int(date[4:6]), int(date[6:8]))
+    try:
+        return datetime.datetime(int(date[:4]), int(date[4:6]), int(date[6:8]))
+    except ValueError:
+        logging.warning("Cannot parse date "+str(date))
 
 
 def format_gender(gender):
@@ -119,25 +122,26 @@ def extract_participant(ds, handedness):
 
 def extract_scan(ds, participant_id, role, comment):
     try:
-        scan_date = format_date(ds.StudyDate)
-
-        scan = conn.db_session.query(conn.Scan).filter_by(
-            participant_id=participant_id, date=scan_date).first()
-
-        if not scan:
-            scan = conn.Scan(
-                date=scan_date,
-                role=role,
-                comment=comment,
-                participant_id=participant_id
-            )
-            conn.db_session.add(scan)
-            conn.db_session.commit()
-
-        return scan.id
+        scan_date = format_date(ds.AcquisitionDate)
+        if not scan_date:
+            raise AttributeError
     except AttributeError:
-        logging.warning("Cannot create scan because some of those fields are missing : "
-                        "StudyDate")
+        scan_date = format_date(ds.SeriesDate)  # If acquisition date is not available then we use the series date
+
+    scan = conn.db_session.query(conn.Scan).filter_by(
+        participant_id=participant_id, date=scan_date).first()
+
+    if not scan:
+        scan = conn.Scan(
+            date=scan_date,
+            role=role,
+            comment=comment,
+            participant_id=participant_id
+        )
+        conn.db_session.add(scan)
+        conn.db_session.commit()
+
+    return scan.id
 
 
 def extract_session(ds, scan_id):
@@ -184,62 +188,62 @@ def extract_sequence_type(ds):
         institution_name = 'unknown'
     try:
         slice_thickness = float(ds.SliceThickness)
-    except AttributeError:
+    except (AttributeError, ValueError):
         logging.warning("Field SliceThickness does not exist")
         slice_thickness = None
     try:
         repetition_time = float(ds.RepetitionTime)
-    except AttributeError:
+    except (AttributeError, ValueError):
         logging.warning("Field RepetitionTime does not exist")
         repetition_time = None
     try:
         echo_time = float(ds.EchoTime)
-    except AttributeError:
+    except (AttributeError, ValueError):
         logging.warning("Field EchoTime does not exist")
         echo_time = None
     try:
         number_of_phase_encoding_steps = int(ds.NumberOfPhaseEncodingSteps)
-    except AttributeError:
+    except (AttributeError, ValueError):
         logging.warning("Field NumberOfPhaseEncodingSteps does not exist")
         number_of_phase_encoding_steps = None
     try:
         percent_phase_field_of_view = float(ds.PercentPhaseFieldOfView)
-    except AttributeError:
+    except (AttributeError, ValueError):
         logging.warning("Field PercentPhaseFieldOfView does not exist")
         percent_phase_field_of_view = None
     try:
         pixel_bandwidth = int(ds.PixelBandwidth)
-    except AttributeError:
+    except (AttributeError, ValueError):
         logging.warning("Field PixelBandwidth does not exist")
         pixel_bandwidth = None
     try:
         flip_angle = float(ds.FlipAngle)
-    except AttributeError:
+    except (AttributeError, ValueError):
         logging.warning("Field FlipAngle does not exist")
         flip_angle = None
     try:
         rows = int(ds.Rows)
-    except AttributeError:
+    except (AttributeError, ValueError):
         logging.warning("Field Rows does not exist")
         rows = None
     try:
         columns = int(ds.Columns)
-    except AttributeError:
+    except (AttributeError, ValueError):
         logging.warning("Field Columns does not exist")
         columns = None
     try:
         magnetic_field_strength = float(ds.MagneticFieldStrength)
-    except AttributeError:
+    except (AttributeError, ValueError):
         logging.warning("Field MagneticFieldStrength does not exist")
         magnetic_field_strength = None
     try:
         echo_train_length = int(ds.EchoTrainLength)
-    except AttributeError:
+    except (AttributeError, ValueError):
         logging.warning("Field EchoTrainLength does not exist")
         echo_train_length = None
     try:
         percent_sampling = float(ds.PercentSampling)
-    except AttributeError:
+    except (AttributeError, ValueError):
         logging.warning("Field PercentSampling does not exist")
         percent_sampling = None
     try:
@@ -249,17 +253,17 @@ def extract_sequence_type(ds):
         pixel_spacing = None
     try:
         pixel_spacing_0 = float(pixel_spacing[0])
-    except AttributeError:
+    except (AttributeError, ValueError):
         logging.warning("Field pixel_spacing0 does not exist")
         pixel_spacing_0 = None
     try:
         pixel_spacing_1 = float(pixel_spacing[1])
-    except AttributeError:
+    except (AttributeError, ValueError):
         logging.warning("Field pixel_spacing1 does not exist")
         pixel_spacing_1 = None
     try:
         echo_number = int(ds.EchoNumber)
-    except AttributeError:
+    except (AttributeError, ValueError):
         echo_number = None
     try:
         space_between_slices = float(ds[0x0018, 0x0088].value)
