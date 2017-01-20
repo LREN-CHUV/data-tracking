@@ -5,10 +5,10 @@
 *.pyc
 
 # Test data
-tests/data/*
-MR.*
-*.dcm
-*.nii
+# tests/data/*
+# MR.*
+# *.dcm
+# *.nii
 
 ### Python template
 # Byte-compiled / optimized / DLL files

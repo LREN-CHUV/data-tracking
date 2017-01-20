@@ -138,28 +138,6 @@ def create_step(db_conn, name, provenance_id, previous_step_id=None):
     return step.id
 
 
-def record_files(db_conn, folder, step_id, previous_step_id=None):
-    """
-    Scan folder looking for files. Find type, meta-data, etc. Store all those data in a DB.
-    :param db_conn: Database connection.
-    :param folder: Folder to scan.
-    :param step_id: Step ID.
-    :param previous_step_id: (optional) Previous step ID.
-    :return:
-    """
-    previous_files_hash = get_files_hash_from_step(db_conn, previous_step_id)
-    nifti_path_extractor = LRENNiftiPathExtractor  # TODO: replace this to use BIDS
-
-    for file_path in glob.iglob(os.path.join(folder, "**/*"), recursive=True):
-        file_type = find_type(file_path)
-        if "DICOM" == file_type:
-            is_copy = hash_file(file_path) in previous_files_hash
-            dicom_import.dicom2db(file_path, file_type, step_id, db_conn)
-        elif "NIFTI" == file_type:
-            is_copy = hash_file(file_path) in previous_files_hash
-            nifti_import.nifti2db(file_path, file_type, step_id, nifti_path_extractor, db_conn)
-
-
 def find_type(file_path):
     """
     Get file type.
