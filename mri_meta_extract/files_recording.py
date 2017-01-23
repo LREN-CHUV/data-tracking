@@ -152,7 +152,7 @@ def find_type(file_path):
             try:
                 nibabel.load(file_path)
                 return "NIFTI"
-            except nibabel.filebasedimages.ImageFileError:
+            except filebasedimages.ImageFileError:
                 logging.info("found a file of type 'data' but does not seem to be NIFTI : " + file_path)
         else:
             logging.info("found a file with unhandled type (%s) : %s" % (file_type, file_path))
