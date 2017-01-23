@@ -6,39 +6,16 @@ MRI Meta-data Extractor
 This is a Python library providing methods to scan folders, extract
 meta-data from files (DICOM, NIFTI, ...) and store them in a database.
 
-Build
------
-
-Run ``./build.sh``. (Builds for Python3)
-
-Publish on PyPi
----------------
-
-Run ``./publish.sh``.
-
 Install
 -------
 
 Run ``pip install mri-meta-extract``. (Only tested with Python3)
 
-Test
-----
-
-Enter the ``tests`` directory.
-
-With Docker
-~~~~~~~~~~~
-
-Run ``test.sh``
-
-Without Docker
-~~~~~~~~~~~~~~
-
--  Run a Postgres database on ``localhost:5432``.
--  Run ``nosetest unittest.py``
-
 Use
 ---
+
+Import the functions you need like this :
+``from mri_meta_extract.files_recording import create_provenance, visit``.
 
 Create a provenance entity using :
 
@@ -75,6 +52,32 @@ Scan a folder to populate the database :
     When enabled, the processing is (about 2 times) faster. This option is enabled by default.
     * param db_url: (optional) Database URL. If not defined, it looks for an Airflow configuration file.
     * return: return processing step ID.
+
+Build
+-----
+
+Run ``./build.sh``. (Builds for Python3)
+
+Test
+----
+
+Enter the ``tests`` directory.
+
+With Docker
+~~~~~~~~~~~
+
+Run ``test.sh``
+
+Without Docker
+~~~~~~~~~~~~~~
+
+-  Run a Postgres database on ``localhost:5432``.
+-  Run ``nosetest unittest.py``
+
+Publish on PyPi
+---------------
+
+Run ``./publish.sh``.
 
 .. |License| image:: https://img.shields.io/badge/license-Apache--2.0-blue.svg
    :target: https://github.com/LREN-CHUV/airflow-imaging-plugins/blob/master/LICENSE
