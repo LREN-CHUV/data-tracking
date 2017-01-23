@@ -82,6 +82,24 @@ def format_gender(gender):
         return DEFAULT_GENDER
 
 
+def format_age(age):
+    try:
+        unit = age[3].upper()
+        value = int(age[:3])
+        if "Y" == unit:
+            return float(value)
+        elif "M" == unit:
+            return float(value/12)
+        elif "W" == unit:
+            return float(value/52.1429)
+        elif "D" == unit:
+            return float(value/365)
+        else:
+            raise ValueError
+    except ValueError:
+        logging.warning("Cannot parse age from : "+str(age))
+
+
 ########################################################################################################################
 # EXTRACTION FUNCTION
 ########################################################################################################################
@@ -99,6 +117,11 @@ def extract_participant(ds, handedness):
         logging.debug("Field PatientBirthDate was not found")
         participant_birth_date = None
     try:
+        participant_age = format_age(ds.PatientAge)
+    except AttributeError:
+        logging.debug("Field PatientAge was not found")
+        participant_age = None
+    try:
         participant_gender = format_gender(ds.PatientSex)
     except AttributeError:
         logging.debug("Field PatientSex was not found")
@@ -112,7 +135,8 @@ def extract_participant(ds, handedness):
             id=participant_id,
             gender=participant_gender,
             handedness=handedness,
-            birthdate=participant_birth_date
+            birthdate=participant_birth_date,
+            age=participant_age
         )
         conn.db_session.add(participant)
         conn.db_session.commit()

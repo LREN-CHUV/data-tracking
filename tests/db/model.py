@@ -70,6 +70,7 @@ class Participant(Base):
     gender = Column(Enum('male', 'female', 'other', 'unknown', name='gender'), nullable=False)
     handedness = Column(Enum('left', 'right', 'ambidexter', 'unknown', name='handedness'), nullable=False)
     birthdate = Column(Date, nullable=True)
+    age = Column(Float, nullable=True)
 
 
 class Project(Base):
