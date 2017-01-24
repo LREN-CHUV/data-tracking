@@ -1,0 +1,3 @@
+[submodule "tests/db"]
+	path = tests/db
+	url = git@github.com:LREN-CHUV/data-catalog-db.git
