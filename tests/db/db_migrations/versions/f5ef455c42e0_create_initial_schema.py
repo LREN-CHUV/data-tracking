@@ -1,13 +1,13 @@
-"""init schema
+"""create initial schema
 
-Revision ID: b2a36c103d9e
+Revision ID: f5ef455c42e0
 Revises: 9dba63763bf6
-Create Date: 2016-11-22 18:01:10.237784
+Create Date: 2017-01-11 17:17:27.742656
 
 """
 
 # revision identifiers, used by Alembic.
-revision = 'b2a36c103d9e'
+revision = 'f5ef455c42e0'
 down_revision = '9dba63763bf6'
 branch_labels = None
 depends_on = None
@@ -22,9 +22,17 @@ def upgrade():
     sa.Column('id', sa.String(length=255), nullable=False),
     sa.Column('gender', sa.Enum('male', 'female', 'other', 'unknown', name='gender'), nullable=False),
     sa.Column('handedness', sa.Enum('left', 'right', 'ambidexter', 'unknown', name='handedness'), nullable=False),
-    sa.Column('birthdate', sa.Date(), nullable=False),
+    sa.Column('birthdate', sa.Date(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('processing_step',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('previous_step_id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.Text(), nullable=False),
+    sa.ForeignKeyConstraint(['previous_step_id'], ['processing_step.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_processing_step_previous_step_id'), 'processing_step', ['previous_step_id'], unique=False)
     op.create_table('researcher',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('email', sa.String(length=255), nullable=False),
@@ -38,24 +46,37 @@ def upgrade():
     sa.Column('manufacturer', sa.String(length=255), nullable=False),
     sa.Column('manufacturer_model_name', sa.String(length=255), nullable=False),
     sa.Column('institution_name', sa.String(length=255), nullable=False),
-    sa.Column('slice_thickness', sa.Float(), nullable=False),
-    sa.Column('repetition_time', sa.Float(), nullable=False),
-    sa.Column('echo_time', sa.Float(), nullable=False),
-    sa.Column('echo_number', sa.Integer(), nullable=False),
-    sa.Column('number_of_phase_encoding_steps', sa.Integer(), nullable=False),
-    sa.Column('percent_phase_field_of_view', sa.Float(), nullable=False),
-    sa.Column('pixel_bandwidth', sa.Integer(), nullable=False),
-    sa.Column('flip_angle', sa.Float(), nullable=False),
-    sa.Column('rows', sa.Integer(), nullable=False),
-    sa.Column('columns', sa.Integer(), nullable=False),
-    sa.Column('magnetic_field_strength', sa.Float(), nullable=False),
-    sa.Column('space_between_slices', sa.Float(), nullable=False),
-    sa.Column('echo_train_length', sa.Integer(), nullable=False),
-    sa.Column('percent_sampling', sa.Float(), nullable=False),
-    sa.Column('pixel_spacing_0', sa.Float(), nullable=False),
-    sa.Column('pixel_spacing_1', sa.Float(), nullable=False),
+    sa.Column('slice_thickness', sa.Float(), nullable=True),
+    sa.Column('repetition_time', sa.Float(), nullable=True),
+    sa.Column('echo_time', sa.Float(), nullable=True),
+    sa.Column('echo_number', sa.Integer(), nullable=True),
+    sa.Column('number_of_phase_encoding_steps', sa.Integer(), nullable=True),
+    sa.Column('percent_phase_field_of_view', sa.Float(), nullable=True),
+    sa.Column('pixel_bandwidth', sa.Integer(), nullable=True),
+    sa.Column('flip_angle', sa.Float(), nullable=True),
+    sa.Column('rows', sa.Integer(), nullable=True),
+    sa.Column('columns', sa.Integer(), nullable=True),
+    sa.Column('magnetic_field_strength', sa.Float(), nullable=True),
+    sa.Column('space_between_slices', sa.Float(), nullable=True),
+    sa.Column('echo_train_length', sa.Integer(), nullable=True),
+    sa.Column('percent_sampling', sa.Float(), nullable=True),
+    sa.Column('pixel_spacing_0', sa.Float(), nullable=True),
+    sa.Column('pixel_spacing_1', sa.Float(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('provenance',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('airflow_step_id', sa.Integer(), nullable=False),
+    sa.Column('dataset', sa.Text(), nullable=False),
+    sa.Column('matlab_version', sa.Text(), nullable=False),
+    sa.Column('spm_version', sa.Text(), nullable=False),
+    sa.Column('spm_revision', sa.Text(), nullable=False),
+    sa.Column('fn_called', sa.Text(), nullable=False),
+    sa.Column('fn_version', sa.Text(), nullable=False),
+    sa.ForeignKeyConstraint(['airflow_step_id'], ['processing_step.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_provenance_airflow_step_id'), 'provenance', ['airflow_step_id'], unique=False)
     op.create_table('quality_check',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('scientist_id', sa.Integer(), nullable=False),
@@ -98,7 +119,7 @@ def upgrade():
     op.create_table('session',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('scan_id', sa.Integer(), nullable=False),
-    sa.Column('value', sa.Integer(), nullable=False),
+    sa.Column('value', sa.String(), nullable=False),
     sa.ForeignKeyConstraint(['scan_id'], ['scan.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -121,34 +142,29 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_repetition_sequence_id'), 'repetition', ['sequence_id'], unique=False)
-    op.create_table('dicom',
+    op.create_table('data_file',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('repetition_id', sa.Integer(), nullable=False),
-    sa.Column('path', sa.Text(), nullable=False),
-    sa.ForeignKeyConstraint(['repetition_id'], ['repetition.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_dicom_repetition_id'), 'dicom', ['repetition_id'], unique=False)
-    op.create_table('nifti',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('repetition_id', sa.Integer(), nullable=False),
+    sa.Column('processing_step_id', sa.Integer(), nullable=False),
     sa.Column('path', sa.Text(), nullable=False),
     sa.Column('result_type', sa.String(length=255), nullable=False),
     sa.Column('output_type', sa.String(length=255), nullable=False),
+    sa.ForeignKeyConstraint(['processing_step_id'], ['processing_step.id'], ),
     sa.ForeignKeyConstraint(['repetition_id'], ['repetition.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_nifti_repetition_id'), 'nifti', ['repetition_id'], unique=False)
+    op.create_index(op.f('ix_data_file_processing_step_id'), 'data_file', ['processing_step_id'], unique=False)
+    op.create_index(op.f('ix_data_file_repetition_id'), 'data_file', ['repetition_id'], unique=False)
     op.create_table('check',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('quality_check_id', sa.Integer(), nullable=False),
-    sa.Column('nifti_id', sa.Integer(), nullable=False),
+    sa.Column('data_file_id', sa.Integer(), nullable=False),
     sa.Column('value', sa.Float(), nullable=False),
-    sa.ForeignKeyConstraint(['nifti_id'], ['nifti.id'], ),
+    sa.ForeignKeyConstraint(['data_file_id'], ['data_file.id'], ),
     sa.ForeignKeyConstraint(['quality_check_id'], ['quality_check.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_check_nifti_id'), 'check', ['nifti_id'], unique=False)
+    op.create_index(op.f('ix_check_data_file_id'), 'check', ['data_file_id'], unique=False)
     op.create_index(op.f('ix_check_quality_check_id'), 'check', ['quality_check_id'], unique=False)
     ### end Alembic commands ###
 
@@ -156,12 +172,11 @@ def upgrade():
 def downgrade():
     ### commands auto generated by Alembic - please adjust! ###
     op.drop_index(op.f('ix_check_quality_check_id'), table_name='check')
-    op.drop_index(op.f('ix_check_nifti_id'), table_name='check')
+    op.drop_index(op.f('ix_check_data_file_id'), table_name='check')
     op.drop_table('check')
-    op.drop_index(op.f('ix_nifti_repetition_id'), table_name='nifti')
-    op.drop_table('nifti')
-    op.drop_index(op.f('ix_dicom_repetition_id'), table_name='dicom')
-    op.drop_table('dicom')
+    op.drop_index(op.f('ix_data_file_repetition_id'), table_name='data_file')
+    op.drop_index(op.f('ix_data_file_processing_step_id'), table_name='data_file')
+    op.drop_table('data_file')
     op.drop_index(op.f('ix_repetition_sequence_id'), table_name='repetition')
     op.drop_table('repetition')
     op.drop_index(op.f('ix_sequence_session_id'), table_name='sequence')
@@ -179,7 +194,11 @@ def downgrade():
     op.drop_table('scan')
     op.drop_index(op.f('ix_quality_check_scientist_id'), table_name='quality_check')
     op.drop_table('quality_check')
+    op.drop_index(op.f('ix_provenance_airflow_step_id'), table_name='provenance')
+    op.drop_table('provenance')
     op.drop_table('sequence_type')
     op.drop_table('researcher')
+    op.drop_index(op.f('ix_processing_step_previous_step_id'), table_name='processing_step')
+    op.drop_table('processing_step')
     op.drop_table('participant')
     ### end Alembic commands ###

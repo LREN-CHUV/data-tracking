@@ -1,4 +1,5 @@
 # coding: utf-8
+from sqlalchemy import Boolean
 from sqlalchemy import Column, Date, Enum, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
@@ -13,33 +14,53 @@ class Check(Base):
 
     id = Column(Integer, primary_key=True, nullable=False)
     quality_check_id = Column(ForeignKey('quality_check.id'), nullable=False, index=True)
-    nifti_id = Column(ForeignKey('nifti.id'), nullable=False, index=True)
+    data_file_id = Column(ForeignKey('data_file.id'), nullable=False, index=True)
     value = Column(Float, nullable=False)
 
-    nifti = relationship('Nifti')
+    data_file = relationship('DataFile')
     quality_check = relationship('QualityCheck')
 
 
-class Dicom(Base):
-    __tablename__ = 'dicom'
+class Provenance(Base):
+    __tablename__ = 'provenance'
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    dataset = Column(Text, nullable=False)
+    matlab_version = Column(Text, nullable=True)
+    spm_version = Column(Text, nullable=True)
+    spm_revision = Column(Text, nullable=True)
+    fn_called = Column(Text, nullable=True)
+    fn_version = Column(Text, nullable=True)
+    others = Column(Text, nullable=True)
+
+
+class ProcessingStep(Base):
+    __tablename__ = 'processing_step'
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    previous_step_id = Column(ForeignKey('processing_step.id'), nullable=True, index=True)
+    provenance_id = Column(ForeignKey('provenance.id'), nullable=False, index=True)
+    name = Column(Text, nullable=False)
+    execution_date = Column(Date, nullable=True)
+
+    processing_step = relationship('ProcessingStep')
+    provenance = relationship('Provenance')
+
+
+class DataFile(Base):
+    __tablename__ = 'data_file'
 
     id = Column(Integer, primary_key=True, nullable=False)
     repetition_id = Column(ForeignKey('repetition.id'), nullable=False, index=True)
+    processing_step_id = Column(ForeignKey('processing_step.id'), nullable=False, index=True)
     path = Column(Text, nullable=False)
+    type = Column(Text, nullable=False)
+    result_type = Column(String(255), nullable=True)
+    output_type = Column(String(255), nullable=True)
+    is_copy = Column(Boolean, nullable=True)
 
     repetition = relationship('Repetition')
-
-
-class Nifti(Base):
-    __tablename__ = 'nifti'
-
-    id = Column(Integer, primary_key=True, nullable=False)
-    repetition_id = Column(ForeignKey('repetition.id'), nullable=False, index=True)
-    path = Column(Text, nullable=False)
-    result_type = Column(String(255), nullable=False)
-    output_type = Column(String(255), nullable=False)
-
-    repetition = relationship('Repetition')
+    processing_step = relationship('ProcessingStep')
 
 
 class Participant(Base):
@@ -49,6 +70,7 @@ class Participant(Base):
     gender = Column(Enum('male', 'female', 'other', 'unknown', name='gender'), nullable=False)
     handedness = Column(Enum('left', 'right', 'ambidexter', 'unknown', name='handedness'), nullable=False)
     birthdate = Column(Date, nullable=True)
+    age = Column(Float, nullable=True)
 
 
 class Project(Base):
@@ -130,9 +152,9 @@ class SequenceType(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(255), nullable=False)
-    manufacturer = Column(String(255), nullable=False)
-    manufacturer_model_name = Column(String(255), nullable=False)
-    institution_name = Column(String(255), nullable=False)
+    manufacturer = Column(String(255), nullable=True)
+    manufacturer_model_name = Column(String(255), nullable=True)
+    institution_name = Column(String(255), nullable=True)
     slice_thickness = Column(Float, nullable=True)
     repetition_time = Column(Float, nullable=True)
     echo_time = Column(Float, nullable=True)

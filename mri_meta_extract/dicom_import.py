@@ -1,221 +1,192 @@
-##########################################################################
-# IMPORTS
-##########################################################################
-
-import os
-import glob
 import dicom
 import datetime
 import logging
 
-from . import connection
 from sqlalchemy.exc import IntegrityError
 from dicom.errors import InvalidDicomError
 
 
-##########################################################################
-# GLOBAL
-##########################################################################
+########################################################################################################################
+# SETTINGS
+########################################################################################################################
 
 DEFAULT_HANDEDNESS = 'unknown'
 DEFAULT_ROLE = 'U'
-DEFAULT_COMMENT = ''
 DEFAULT_GENDER = 'unknown'
+DEFAULT_PARTICIPANT_ID = 'unknown'
+DEFAULT_COMMENT = ''
+DEFAULT_SESSION_VALUE = 'unknown'
+DEFAULT_REPETITION = 0
+
+MALE_GENDER_LIST = ['m', 'male', 'man', 'boy']
+FEMALE_GENDER_LIST = ['f', 'female', 'woman', 'girl']
+MALE = 'male'
+FEMALE = 'female'
 
 conn = None
 
 
-##########################################################################
-# FUNCTIONS - DICOM
-##########################################################################
+########################################################################################################################
+# MAIN FUNCTIONS
+########################################################################################################################
 
-def dicom2db(folder, files_pattern='**/MR.*', db_url=None):
+def dicom2db(file_path, file_type, is_copy, step_id, db_conn):
     """
-    Extract some meta-data from DICOM files and store them into a DB
-    :param folder: root folder
-    :param files_pattern: DICOM files pattern (default is '/**/MR.*')
-    :param db_url: DB URL, if not defined it will try to find an Airflow configuration file
-    :return:
-    """
-    global conn
-    logging.info("Connecting to DB...")
-    conn = connection.Connection(db_url)
-    checked = dict()
-    for filename in glob.iglob(os.path.join(folder, files_pattern), recursive=True):
-        try:
-            logging.debug("Processing '%s'" % filename)
-
-            leaf_folder = os.path.split(filename)[0]
-            if leaf_folder not in checked:
-                logging.info("Extracting DICOM headers from '%s'" % filename)
-                ds = dicom.read_file(filename)
-
-                participant_id = extract_participant(ds, DEFAULT_HANDEDNESS)
-                scan_id = extract_scan(
-                    ds, participant_id, DEFAULT_ROLE, DEFAULT_COMMENT)
-                session_id = extract_session(ds, scan_id)
-                sequence_type_id = extract_sequence_type(ds)
-                sequence_id = extract_sequence(session_id, sequence_type_id)
-                repetition_id = extract_repetition(ds, sequence_id)
-
-                checked[leaf_folder] = repetition_id
-            extract_dicom(filename, checked[leaf_folder])
-
-        except InvalidDicomError:
-            logging.warning("%s is not a DICOM file !" % filename)
-
-        except IntegrityError:
-            print_db_except()
-            conn.db_session.rollback()
-
-    logging.info("Closing DB connection...")
-    conn.close()
-
-
-def visit_info(folder, files_pattern='**/MR.*', db_url=None):
-    """
-    Get visit meta-data from DICOM files (participant ID and scan date)
-    :param folder: root folder
-    :param files_pattern: DICOM files pattern (default is '/**/MR.*')
-    :param db_url: DB URL, if not defined it will try to find an Airflow configuration file
-    :return: (participant_id, scan_date)
+    Extract some meta-data from a DICOM file and store in a DB.
+    :param file_path: File path.
+    :param file_type: File type (should be 'DICOM').
+    :param step_id: Step ID
+    :param db_conn: Database connection.
+    :return: A dictionary containing the following IDs : participant_id, scan_id, session_id, sequence_type_id,
+    sequence_id, repetition_id, file_id.
     """
     global conn
-    logging.info("Connecting to DB...")
-    conn = connection.Connection(db_url)
-    logging.info(os.path.join(folder, files_pattern))
-    for filename in glob.iglob(os.path.join(folder, files_pattern), recursive=True):
-        try:
-            logging.info("Processing '%s'" % filename)
-            ds = dicom.read_file(filename)
-
-            participant_id = ds.PatientID
-            scan_date = format_date(ds.SeriesDate)
-
-            logging.info("Closing DB connection...")
-            conn.close()
-            return participant_id, scan_date
-
-        except AttributeError:
-            logging.warning("%s does not contain PatientID or StudyDate !" % filename)
-        except InvalidDicomError:
-            logging.warning("%s is not a DICOM file !" % filename)
-
-        except IntegrityError:
-            print_db_except()
-            conn.db_session.rollback()
-    logging.info("Closing DB connection...")
-    conn.close()
+    conn = db_conn
+    try:
+        logging.info("Extracting DICOM headers from '%s'" % file_path)
+        ds = dicom.read_file(file_path)
+        participant_id = extract_participant(ds, DEFAULT_HANDEDNESS)
+        scan_id = extract_scan(ds, participant_id, DEFAULT_ROLE, DEFAULT_COMMENT)
+        session_id = extract_session(ds, scan_id)
+        sequence_type_id = extract_sequence_type(ds)
+        sequence_id = extract_sequence(session_id, sequence_type_id)
+        repetition_id = extract_repetition(ds, sequence_id)
+        file_id = extract_dicom(file_path, file_type, is_copy, repetition_id, step_id)
+        return {'participant_id': participant_id, 'scan_id': scan_id, 'session_id': session_id,
+                'sequence_type_id': sequence_type_id, 'sequence_id': sequence_id, 'repetition_id': repetition_id,
+                'file_id': file_id}
+    except InvalidDicomError:
+        logging.warning("%s is not a DICOM file !" % step_id)
+    except IntegrityError:
+        logging.warning("A problem occurred with the DB ! A rollback will be performed...")
+        conn.db_session.rollback()
 
 
-##########################################################################
-# FUNCTIONS - UTILS
-##########################################################################
+########################################################################################################################
+# UTIL FUNCTIONS
+########################################################################################################################
 
 def format_date(date):
     try:
         return datetime.datetime(int(date[:4]), int(date[4:6]), int(date[6:8]))
     except ValueError:
-        return None
+        logging.warning("Cannot parse date from : "+str(date))
 
 
 def format_gender(gender):
-    if gender == 'M':
-        return 'male'
-    elif gender == 'F':
-        return 'female'
+    if gender.lower() in MALE_GENDER_LIST:
+        return MALE
+    elif gender.lower() in FEMALE_GENDER_LIST:
+        return FEMALE
     else:
-        return 'unknown'
+        return DEFAULT_GENDER
 
 
-def print_db_except():
-    logging.warning("A problem occurred while trying to insert data into DB.")
-    logging.warning(
-        "This can be caused by a duplicate entry on a unique field.")
-    logging.warning("A rollback will be performed !")
+def format_age(age):
+    try:
+        unit = age[3].upper()
+        value = int(age[:3])
+        if "Y" == unit:
+            return float(value)
+        elif "M" == unit:
+            return float(value/12)
+        elif "W" == unit:
+            return float(value/52.1429)
+        elif "D" == unit:
+            return float(value/365)
+        else:
+            raise ValueError
+    except ValueError:
+        logging.warning("Cannot parse age from : "+str(age))
 
 
-##########################################################################
-# FUNCTIONS - DATABASE
-##########################################################################
+########################################################################################################################
+# EXTRACTION FUNCTION
+########################################################################################################################
 
 
 def extract_participant(ds, handedness):
     try:
         participant_id = ds.PatientID
-
-        try:
-            participant_birth_date = format_date(ds.PatientBirthDate)
-        except AttributeError:
-            logging.warning("Birth date is unknown")
-            participant_birth_date = None
-        try:
-            participant_gender = format_gender(ds.PatientSex)
-        except AttributeError:
-            logging.warning("Gender is unknown")
-            participant_gender = DEFAULT_GENDER
-
-        participant = conn.db_session.query(
-            conn.Participant).filter_by(id=participant_id).first()
-
-        if not participant:
-            participant = conn.Participant(
-                id=participant_id,
-                gender=participant_gender,
-                handedness=handedness,
-                birthdate=participant_birth_date
-            )
-            conn.db_session.add(participant)
-            conn.db_session.commit()
-
-        return participant.id
     except AttributeError:
-        logging.warning("Cannot create participant because some of those fields are missing : "
-                        "PatientID")
+        logging.warning("Patient ID was not found !")
+        participant_id = DEFAULT_PARTICIPANT_ID
+    try:
+        participant_birth_date = format_date(ds.PatientBirthDate)
+    except AttributeError:
+        logging.debug("Field PatientBirthDate was not found")
+        participant_birth_date = None
+    try:
+        participant_age = format_age(ds.PatientAge)
+    except AttributeError:
+        logging.debug("Field PatientAge was not found")
+        participant_age = None
+    try:
+        participant_gender = format_gender(ds.PatientSex)
+    except AttributeError:
+        logging.debug("Field PatientSex was not found")
+        participant_gender = DEFAULT_GENDER
+
+    participant = conn.db_session.query(
+        conn.Participant).filter_by(id=participant_id).first()
+
+    if not participant:
+        participant = conn.Participant(
+            id=participant_id,
+            gender=participant_gender,
+            handedness=handedness,
+            birthdate=participant_birth_date,
+            age=participant_age
+        )
+        conn.db_session.add(participant)
+        conn.db_session.commit()
+
+    return participant.id
 
 
 def extract_scan(ds, participant_id, role, comment):
     try:
-        scan_date = format_date(ds.SeriesDate)
-
-        scan = conn.db_session.query(conn.Scan).filter_by(
-            participant_id=participant_id, date=scan_date).first()
-
-        if not scan:
-            scan = conn.Scan(
-                date=scan_date,
-                role=role,
-                comment=comment,
-                participant_id=participant_id
-            )
-            conn.db_session.add(scan)
-            conn.db_session.commit()
-
-        return scan.id
+        scan_date = format_date(ds.AcquisitionDate)
+        if not scan_date:
+            raise AttributeError
     except AttributeError:
-        logging.warning("Cannot create scan because some of those fields are missing : "
-                        "StudyDate")
+        scan_date = format_date(ds.SeriesDate)  # If acquisition date is not available then we use the series date
+
+    scan = conn.db_session.query(conn.Scan).filter_by(
+        participant_id=participant_id, date=scan_date).first()
+
+    if not scan:
+        scan = conn.Scan(
+            date=scan_date,
+            role=role,
+            comment=comment,
+            participant_id=participant_id
+        )
+        conn.db_session.add(scan)
+        conn.db_session.commit()
+
+    return scan.id
 
 
 def extract_session(ds, scan_id):
     try:
         session_value = str(ds.StudyID)
-
-        session = conn.db_session.query(conn.Session).filter_by(
-            scan_id=scan_id, value=session_value).first()
-
-        if not session:
-            session = conn.Session(
-                scan_id=scan_id,
-                value=session_value
-            )
-            conn.db_session.add(session)
-            conn.db_session.commit()
-
-        return session.id
     except AttributeError:
-        logging.warning("Cannot create session because some of those fields are missing : "
-                        "StudyID")
+        logging.debug("Field StudyID was not found")
+        session_value = DEFAULT_SESSION_VALUE
+
+    session = conn.db_session.query(conn.Session).filter_by(
+        scan_id=scan_id, value=session_value).first()
+
+    if not session:
+        session = conn.Session(
+            scan_id=scan_id,
+            value=session_value
+        )
+        conn.db_session.add(session)
+        conn.db_session.commit()
+
+    return session.id
 
 
 def extract_sequence_type(ds):
@@ -339,7 +310,7 @@ def extract_sequence_type(ds):
     ).all()
 
     sequence_type_list = list(filter(lambda s: not (
-        s.slice_thickness != str(slice_thickness)
+        str(s.slice_thickness) != str(slice_thickness)
         or str(s.repetition_time) != str(repetition_time)
         or str(s.echo_time) != str(echo_time)
         or str(s.percent_phase_field_of_view) != str(percent_phase_field_of_view)
@@ -401,31 +372,35 @@ def extract_sequence(session_id, sequence_type_id):
 def extract_repetition(ds, sequence_id):
     try:
         repetition_value = int(ds.SeriesNumber)
-        repetition = conn.db_session.query(conn.Repetition).filter_by(
-            sequence_id=sequence_id, value=repetition_value).first()
-
-        if not repetition:
-            repetition = conn.Repetition(
-                sequence_id=sequence_id,
-                value=repetition_value
-            )
-            conn.db_session.add(repetition)
-            conn.db_session.commit()
-
-        return repetition.id
     except AttributeError:
-        logging.warning("Cannot create repetition because some of those fields are missing : "
-                        "SeriesNumber")
+        logging.warning("Field SeriesNumber was not found")
+        repetition_value = DEFAULT_REPETITION
+
+    repetition = conn.db_session.query(conn.Repetition).filter_by(
+        sequence_id=sequence_id, value=repetition_value).first()
+
+    if not repetition:
+        repetition = conn.Repetition(
+            sequence_id=sequence_id,
+            value=repetition_value
+        )
+        conn.db_session.add(repetition)
+        conn.db_session.commit()
+
+    return repetition.id
 
 
-def extract_dicom(path, repetition_id):
-    dcm = conn.db_session.query(conn.Dicom).filter_by(
+def extract_dicom(path, file_type, is_copy, repetition_id, processing_step_id):
+    dcm = conn.db_session.query(conn.DataFile).filter_by(
         path=path, repetition_id=repetition_id).first()
 
     if not dcm:
-        dcm = conn.Dicom(
+        dcm = conn.DataFile(
             path=path,
-            repetition_id=repetition_id
+            type=file_type,
+            repetition_id=repetition_id,
+            processing_step_id=processing_step_id,
+            is_copy=is_copy
         )
         conn.db_session.add(dcm)
         conn.db_session.commit()

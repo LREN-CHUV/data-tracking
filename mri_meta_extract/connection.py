@@ -17,12 +17,13 @@ class Connection:
 
         self.Participant = self.Base.classes.participant
         self.Scan = self.Base.classes.scan
-        self.Dicom = self.Base.classes.dicom
+        self.DataFile = self.Base.classes.data_file
         self.Session = self.Base.classes.session
         self.SequenceType = self.Base.classes.sequence_type
         self.Sequence = self.Base.classes.sequence
         self.Repetition = self.Base.classes.repetition
-        self.Nifti = self.Base.classes.nifti
+        self.ProcessingStep = self.Base.classes.processing_step
+        self.Provenance = self.Base.classes.provenance
 
         self.db_session = orm.Session(self.engine)
 

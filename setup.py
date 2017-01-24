@@ -9,7 +9,7 @@ with codecs.open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='mri_meta_extract',
-    version='1.1.7',
+    version='1.2.1',
     url='https://github.com/LREN-CHUV/mri-meta-extract',
     description='Extract meta-data from DICOM and NIFTI files',
     long_description=long_description,
@@ -20,5 +20,5 @@ setup(
     extras_require={
         'test': ['unittest'],
     },
-    install_requires=['airflow', 'pydicom', 'sqlalchemy']
+    install_requires=['airflow', 'pydicom', 'sqlalchemy', 'nose', 'python-magic', 'nibabel', 'psycopg2']
 )
