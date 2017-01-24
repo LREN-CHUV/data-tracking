@@ -66,3 +66,7 @@ Run `test.sh`
 ## Publish on PyPi
 
 Run `./publish.sh`.
+
+## NOTES
+
+* This project contains a reference to a Git submodule. You can use the `--recursive` flag when cloning the project to clone the submodule too.
