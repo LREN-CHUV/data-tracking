@@ -38,12 +38,13 @@ Scan a folder to populate the database :
 
 ::
 
-    def visit(folder, provenance_id, previous_step_id=None, db_url=None)
+    def visit(step_name, folder, provenance_id, previous_step_id=None, boost=True, db_url=None)
 
     Record all files from a folder into the database.
     The files are listed in the DB. If a file has been copied from previous step without any transformation, it will be
     detected and marked in the DB. The type of file will be detected and stored in the DB. If a files (e.g. a DICOM
     file) contains some meta-data, those will be stored in the DB.
+    * param step_name: Name of the processing step that produced the folder to visit.
     * param folder: folder path.
     * param provenance_id: provenance label.
     * param previous_step_id: (optional) previous processing step ID. If not defined, we assume this is the first
