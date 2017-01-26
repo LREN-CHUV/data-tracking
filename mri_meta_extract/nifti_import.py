@@ -16,6 +16,16 @@ conn = None
 ########################################################################################################################
 
 def nifti2db(file_path, file_type, is_copy, step_id, nifti_path_extractor, db_conn):
+    """
+    Extract some meta-data from NIFTI files (actually mostly from their paths) and stores it in a DB.
+    :param file_path: File path.
+    :param file_type: File type.
+    :param is_copy: Indicate if this file is a copy.
+    :param step_id: Step ID.
+    :param nifti_path_extractor: A nifti_path_extractor implementation.
+    :param db_conn: Database connection.
+    :return:
+    """
     global conn
     conn = db_conn
     logging.info("Processing '%s'" % file_path)

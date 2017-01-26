@@ -50,6 +50,8 @@ Scan a folder to populate the database :
 
 Run `./build.sh`. (Builds for Python3)
 
+(This includes the auto-generation of the README.rst based on the README.md)
+
 ## Test
 
 Enter the `tests` directory.
@@ -66,6 +68,10 @@ Run `test.sh`
 ## Publish on PyPi
 
 Run `./publish.sh`.
+
+(This builds the project prior to pushing on PyPi)
+
+NOTE : Do not forget to update the version number in the setup.py prior to publishing.
 
 ## NOTES
 

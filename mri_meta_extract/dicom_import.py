@@ -35,6 +35,7 @@ def dicom2db(file_path, file_type, is_copy, step_id, db_conn):
     Extract some meta-data from a DICOM file and store in a DB.
     :param file_path: File path.
     :param file_type: File type (should be 'DICOM').
+    :param is_copy: Indicate if this file is a copy.
     :param step_id: Step ID
     :param db_conn: Database connection.
     :return: A dictionary containing the following IDs : participant_id, scan_id, session_id, sequence_type_id,
