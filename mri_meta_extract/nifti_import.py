@@ -12,7 +12,7 @@ conn = None
 
 
 ########################################################################################################################
-# FUNCTIONS - NIFTI
+# PUBLIC FUNCTIONS - NIFTI
 ########################################################################################################################
 
 def nifti2db(file_path, file_type, is_copy, step_id, nifti_path_extractor, db_conn):
@@ -29,7 +29,7 @@ def nifti2db(file_path, file_type, is_copy, step_id, nifti_path_extractor, db_co
     global conn
     conn = db_conn
     logging.info("Processing '%s'" % file_path)
-    save_nifti_meta(
+    _save_nifti_meta(
         nifti_path_extractor.extract_participant_id(file_path),
         nifti_path_extractor.extract_scan_date(file_path),
         nifti_path_extractor.extract_session(file_path),
@@ -45,10 +45,10 @@ def nifti2db(file_path, file_type, is_copy, step_id, nifti_path_extractor, db_co
 
 
 ########################################################################################################################
-# FUNCTIONS - UTILS
+# PRIVATE FUNCTIONS - UTILS
 ########################################################################################################################
 
-def date_from_str(date_str):
+def _date_from_str(date_str):
     day = int(re.findall('(\d+)\.\d+\.\d+', date_str)[0])
     month = int(re.findall('\d+\.(\d+)\.\d+', date_str)[0])
     year = int(re.findall('\d+\.\d+\.(\d+)', date_str)[0])
@@ -56,10 +56,10 @@ def date_from_str(date_str):
 
 
 ########################################################################################################################
-# FUNCTIONS - DATABASE
+# PRIVATE FUNCTIONS - DATABASE
 ########################################################################################################################
 
-def save_nifti_meta(
+def _save_nifti_meta(
         participant_id,
         scan_date,
         session,
@@ -77,7 +77,7 @@ def save_nifti_meta(
         if scan_date:
             scan = conn.db_session.query(conn.Scan).filter_by(date=scan_date, participant_id=participant_id).first()
         else:
-            scan = guess_scan(participant_id)
+            scan = _guess_scan(participant_id)
             if not scan:
                 logging.warning("Cannot record file : " + file_path + " ! Cannot find scan date...")
                 return
@@ -120,7 +120,7 @@ def save_nifti_meta(
                         conn.db_session.commit()
 
 
-def guess_scan(participant_id):
+def _guess_scan(participant_id):
     scans = conn.db_session.query(conn.Scan).filter_by(participant_id=participant_id).all()
     if len(scans) == 1:
         return scans[0]

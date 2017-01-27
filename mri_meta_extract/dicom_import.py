@@ -27,7 +27,7 @@ conn = None
 
 
 ########################################################################################################################
-# MAIN FUNCTIONS
+# PUBLIC FUNCTIONS
 ########################################################################################################################
 
 def dicom2db(file_path, file_type, is_copy, step_id, db_conn):
@@ -46,13 +46,13 @@ def dicom2db(file_path, file_type, is_copy, step_id, db_conn):
     try:
         logging.info("Extracting DICOM headers from '%s'" % file_path)
         ds = dicom.read_file(file_path)
-        participant_id = extract_participant(ds, DEFAULT_HANDEDNESS)
-        scan_id = extract_scan(ds, participant_id, DEFAULT_ROLE, DEFAULT_COMMENT)
-        session_id = extract_session(ds, scan_id)
-        sequence_type_id = extract_sequence_type(ds)
-        sequence_id = extract_sequence(session_id, sequence_type_id)
-        repetition_id = extract_repetition(ds, sequence_id)
-        file_id = extract_dicom(file_path, file_type, is_copy, repetition_id, step_id)
+        participant_id = _extract_participant(ds, DEFAULT_HANDEDNESS)
+        scan_id = _extract_scan(ds, participant_id, DEFAULT_ROLE, DEFAULT_COMMENT)
+        session_id = _extract_session(ds, scan_id)
+        sequence_type_id = _extract_sequence_type(ds)
+        sequence_id = _extract_sequence(session_id, sequence_type_id)
+        repetition_id = _extract_repetition(ds, sequence_id)
+        file_id = _extract_dicom(file_path, file_type, is_copy, repetition_id, step_id)
         return {'participant_id': participant_id, 'scan_id': scan_id, 'session_id': session_id,
                 'sequence_type_id': sequence_type_id, 'sequence_id': sequence_id, 'repetition_id': repetition_id,
                 'file_id': file_id}
@@ -64,17 +64,17 @@ def dicom2db(file_path, file_type, is_copy, step_id, db_conn):
 
 
 ########################################################################################################################
-# UTIL FUNCTIONS
+# PRIVATE UTIL FUNCTIONS
 ########################################################################################################################
 
-def format_date(date):
+def _format_date(date):
     try:
         return datetime.datetime(int(date[:4]), int(date[4:6]), int(date[6:8]))
     except ValueError:
         logging.warning("Cannot parse date from : "+str(date))
 
 
-def format_gender(gender):
+def _format_gender(gender):
     if gender.lower() in MALE_GENDER_LIST:
         return MALE
     elif gender.lower() in FEMALE_GENDER_LIST:
@@ -83,7 +83,7 @@ def format_gender(gender):
         return DEFAULT_GENDER
 
 
-def format_age(age):
+def _format_age(age):
     try:
         unit = age[3].upper()
         value = int(age[:3])
@@ -102,28 +102,28 @@ def format_age(age):
 
 
 ########################################################################################################################
-# EXTRACTION FUNCTION
+# PRIVATE EXTRACTION FUNCTION
 ########################################################################################################################
 
 
-def extract_participant(ds, handedness):
+def _extract_participant(ds, handedness):
     try:
         participant_id = ds.PatientID
     except AttributeError:
         logging.warning("Patient ID was not found !")
         participant_id = DEFAULT_PARTICIPANT_ID
     try:
-        participant_birth_date = format_date(ds.PatientBirthDate)
+        participant_birth_date = _format_date(ds.PatientBirthDate)
     except AttributeError:
         logging.debug("Field PatientBirthDate was not found")
         participant_birth_date = None
     try:
-        participant_age = format_age(ds.PatientAge)
+        participant_age = _format_age(ds.PatientAge)
     except AttributeError:
         logging.debug("Field PatientAge was not found")
         participant_age = None
     try:
-        participant_gender = format_gender(ds.PatientSex)
+        participant_gender = _format_gender(ds.PatientSex)
     except AttributeError:
         logging.debug("Field PatientSex was not found")
         participant_gender = DEFAULT_GENDER
@@ -145,13 +145,13 @@ def extract_participant(ds, handedness):
     return participant.id
 
 
-def extract_scan(ds, participant_id, role, comment):
+def _extract_scan(ds, participant_id, role, comment):
     try:
-        scan_date = format_date(ds.AcquisitionDate)
+        scan_date = _format_date(ds.AcquisitionDate)
         if not scan_date:
             raise AttributeError
     except AttributeError:
-        scan_date = format_date(ds.SeriesDate)  # If acquisition date is not available then we use the series date
+        scan_date = _format_date(ds.SeriesDate)  # If acquisition date is not available then we use the series date
 
     scan = conn.db_session.query(conn.Scan).filter_by(
         participant_id=participant_id, date=scan_date).first()
@@ -169,7 +169,7 @@ def extract_scan(ds, participant_id, role, comment):
     return scan.id
 
 
-def extract_session(ds, scan_id):
+def _extract_session(ds, scan_id):
     try:
         session_value = str(ds.StudyID)
     except AttributeError:
@@ -190,7 +190,7 @@ def extract_session(ds, scan_id):
     return session.id
 
 
-def extract_sequence_type(ds):
+def _extract_sequence_type(ds):
     try:
         sequence_name = ds.ProtocolName
     except AttributeError:
@@ -354,7 +354,7 @@ def extract_sequence_type(ds):
     return sequence_type.id
 
 
-def extract_sequence(session_id, sequence_type_id):
+def _extract_sequence(session_id, sequence_type_id):
     sequence = conn.db_session.query(conn.Sequence)\
         .filter_by(session_id=session_id, sequence_type_id=sequence_type_id)\
         .first()
@@ -370,7 +370,7 @@ def extract_sequence(session_id, sequence_type_id):
     return sequence.id
 
 
-def extract_repetition(ds, sequence_id):
+def _extract_repetition(ds, sequence_id):
     try:
         repetition_value = int(ds.SeriesNumber)
     except AttributeError:
@@ -391,7 +391,7 @@ def extract_repetition(ds, sequence_id):
     return repetition.id
 
 
-def extract_dicom(path, file_type, is_copy, repetition_id, processing_step_id):
+def _extract_dicom(path, file_type, is_copy, repetition_id, processing_step_id):
     dcm = conn.db_session.query(conn.DataFile).filter_by(
         path=path, repetition_id=repetition_id).first()
 

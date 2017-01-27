@@ -21,7 +21,7 @@ HASH_BLOCK_SIZE = 65536  # Avoid getting out of memory when hashing big files
 
 
 ########################################################################################################################
-# MAIN FUNCTIONS
+# PUBLIC FUNCTIONS
 ########################################################################################################################
 
 def visit(step_name, folder, provenance_id, previous_step_id=None, boost=True, db_url=None):
@@ -43,25 +43,25 @@ def visit(step_name, folder, provenance_id, previous_step_id=None, boost=True, d
     logging.info("Connecting to database...")
     db_conn = connection.Connection(db_url)
 
-    step_id = create_step(db_conn, step_name, provenance_id, previous_step_id)
+    step_id = _create_step(db_conn, step_name, provenance_id, previous_step_id)
 
-    previous_files_hash = get_files_hash_from_step(db_conn, previous_step_id)
+    previous_files_hash = _get_files_hash_from_step(db_conn, previous_step_id)
     nifti_path_extractor = LRENNiftiPathExtractor  # TODO: replace this to use BIDS
 
     checked = dict()
     for file_path in glob.iglob(os.path.join(folder, "**/*"), recursive=True):
         logging.debug("Processing '%s'" % file_path)
-        file_type = find_type(file_path)
+        file_type = _find_type(file_path)
         if "DICOM" == file_type:
-            is_copy = hash_file(file_path) in previous_files_hash
+            is_copy = _hash_file(file_path) in previous_files_hash
             leaf_folder = os.path.split(file_path)[0]
             if leaf_folder not in checked or not boost:
                 ret = dicom_import.dicom2db(file_path, file_type, is_copy, step_id, db_conn)
                 checked[leaf_folder] = ret['repetition_id']
             else:
-                dicom_import.extract_dicom(file_path, file_type, is_copy, checked[leaf_folder], step_id)
+                dicom_import._extract_dicom(file_path, file_type, is_copy, checked[leaf_folder], step_id)
         elif "NIFTI" == file_type:
-            is_copy = hash_file(file_path) in previous_files_hash
+            is_copy = _hash_file(file_path) in previous_files_hash
             nifti_import.nifti2db(file_path, file_type, is_copy, step_id, nifti_path_extractor, db_conn)
 
     logging.info("Closing database connection...")
@@ -109,10 +109,10 @@ def create_provenance(dataset, matlab_version=None, spm_version=None, spm_revisi
 
 
 ########################################################################################################################
-# SECONDARY FUNCTIONS
+# PRIVATE FUNCTIONS
 ########################################################################################################################
 
-def create_step(db_conn, name, provenance_id, previous_step_id=None):
+def _create_step(db_conn, name, provenance_id, previous_step_id=None):
     """
     Create (or get if already exists) a processing step entity, store it in the database and get back a step ID.
     :param db_conn: Database connection.
@@ -138,7 +138,7 @@ def create_step(db_conn, name, provenance_id, previous_step_id=None):
     return step.id
 
 
-def find_type(file_path):
+def _find_type(file_path):
     """
     Get file type.
     :param file_path: File path
@@ -162,12 +162,12 @@ def find_type(file_path):
     return "other"
 
 
-def get_files_hash_from_step(db_conn, step_id):
+def _get_files_hash_from_step(db_conn, step_id):
     files = db_conn.db_session.query(db_conn.DataFile).filter_by(processing_step_id=step_id).all()
-    return [hash_file(file.path) for file in files]
+    return [_hash_file(file.path) for file in files]
 
 
-def hash_file(filename):
+def _hash_file(filename):
     hasher = hashlib.sha1()
     with open(filename, 'rb') as f:
         buf = f.read(HASH_BLOCK_SIZE)
