@@ -1,6 +1,5 @@
 import sys
 import os
-import subprocess
 
 from nose.tools import assert_equal
 
@@ -19,7 +18,7 @@ class TestFilesRecording:
 
     @classmethod
     def setup_class(cls):
-        subprocess.call("./init_db.sh", shell=True)  # Create the DB tables
+        pass
 
     @classmethod
     def teardown_class(cls):

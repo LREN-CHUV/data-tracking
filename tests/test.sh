@@ -10,6 +10,10 @@ if [ -z "$CIRCLECI" ] || [ "$CIRCLECI" = false ] ; then
     sleep 5  # TODO: replace this by a test
 fi
 
+# Create the DB tables
+echo "Creating DB tables..."
+./init_db.sh
+
 # Run unit tests
 echo "Running unit tests..."
 nosetests unittest.py
