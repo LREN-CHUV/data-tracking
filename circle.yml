@@ -17,5 +17,6 @@ test:
     - pip install airflow
     - pip install pydicom
     - pip install sqlalchemy
+    - pip install python-magic
   override:
     - cd ./tests && ./test.sh
