@@ -8,7 +8,7 @@ from mri_meta_extract import files_recording
 from mri_meta_extract import connection
 
 
-DB_URL = 'postgresql://postgres:postgres@localhost:5432/postgres'
+DB_URL = 'postgresql://postgres:postgres@localhost:5433/postgres'
 
 
 class TestFilesRecording:
