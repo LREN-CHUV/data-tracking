@@ -59,6 +59,9 @@ Build
 
 Run ``./build.sh``. (Builds for Python3)
 
+(This includes the auto-generation of the README.rst based on the
+README.md)
+
 Test
 ----
 
@@ -80,8 +83,20 @@ Publish on PyPi
 
 Run ``./publish.sh``.
 
+(This builds the project prior to pushing on PyPi)
+
+NOTE : Do not forget to update the version number in the setup.py prior
+to publishing.
+
+NOTES
+-----
+
+-  This project contains a reference to a Git submodule. You can use the
+   ``--recursive`` flag when cloning the project to clone the submodule
+   too.
+
 .. |License| image:: https://img.shields.io/badge/license-Apache--2.0-blue.svg
-   :target: https://github.com/LREN-CHUV/airflow-imaging-plugins/blob/master/LICENSE
+   :target: https://github.com/LREN-CHUV/mri-meta-extract/blob/master/LICENSE
 .. |Codacy Badge| image:: https://api.codacy.com/project/badge/Grade/4547fb5d1e464e4087640e046893576a
    :target: https://www.codacy.com/app/mirco-nasuti/mri-meta-extract?utm_source=github.com&utm_medium=referral&utm_content=LREN-CHUV/mri-meta-extract&utm_campaign=Badge_Grade
 .. |CircleCI| image:: https://circleci.com/gh/LREN-CHUV/mri-meta-extract.svg?style=svg
