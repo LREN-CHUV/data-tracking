@@ -1,18 +1,11 @@
 machine:
-  python:
-    version: 3.5.2
   services:
     - docker
 dependencies:
   override:
     - docker info
-checkout:
-  post:
-    - git submodule sync
-    - git submodule update --init
 test:
   pre:
-    - pip install alembic
     - pip install psycopg2
     - pip install airflow
     - pip install pydicom
