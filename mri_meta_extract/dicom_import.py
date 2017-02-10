@@ -30,7 +30,7 @@ conn = None
 # PUBLIC FUNCTIONS
 ########################################################################################################################
 
-def dicom2db(file_path, file_type, is_copy, step_id, db_conn):
+def dicom2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=False):
     """
     Extract some meta-data from a DICOM file and store in a DB.
     :param file_path: File path.
@@ -38,6 +38,8 @@ def dicom2db(file_path, file_type, is_copy, step_id, db_conn):
     :param is_copy: Indicate if this file is a copy.
     :param step_id: Step ID
     :param db_conn: Database connection.
+    :param sid_by_patient: Rarely, a data set might use study IDs which are unique by patient (not for the whole study).
+    E.g.: LREN data. In such a case, you have to enable this flag. This will use PatientID + StudyID as a session ID.
     :return: A dictionary containing the following IDs : participant_id, scan_id, session_id, sequence_type_id,
     sequence_id, repetition_id, file_id.
     """
@@ -48,7 +50,7 @@ def dicom2db(file_path, file_type, is_copy, step_id, db_conn):
         ds = dicom.read_file(file_path)
         participant_id = _extract_participant(ds, DEFAULT_HANDEDNESS)
         scan_id = _extract_scan(ds, participant_id, DEFAULT_ROLE, DEFAULT_COMMENT)
-        session_id = _extract_session(ds, scan_id)
+        session_id = _extract_session(ds, scan_id, sid_by_patient)
         sequence_type_id = _extract_sequence_type(ds)
         sequence_id = _extract_sequence(session_id, sequence_type_id)
         repetition_id = _extract_repetition(ds, sequence_id)
@@ -187,9 +189,11 @@ def _extract_scan(ds, participant_id, role, comment):
     return scan.id
 
 
-def _extract_session(ds, scan_id):
+def _extract_session(ds, scan_id, by_patient=False):
     try:
         session_value = str(ds.StudyID)
+        if by_patient:
+            session_value += str(ds.PatientID)
     except AttributeError:
         logging.debug("Field StudyID was not found")
         session_value = DEFAULT_SESSION_VALUE
