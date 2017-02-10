@@ -59,7 +59,7 @@ def visit(step_name, folder, provenance_id, previous_step_id=None, boost=True, d
                 ret = dicom_import.dicom2db(file_path, file_type, is_copy, step_id, db_conn)
                 checked[leaf_folder] = ret['repetition_id']
             else:
-                dicom_import._extract_dicom(file_path, file_type, is_copy, checked[leaf_folder], step_id)
+                dicom_import.extract_dicom(file_path, file_type, is_copy, checked[leaf_folder], step_id)
         elif "NIFTI" == file_type:
             is_copy = _hash_file(file_path) in previous_files_hash
             nifti_import.nifti2db(file_path, file_type, is_copy, step_id, nifti_path_extractor, db_conn)

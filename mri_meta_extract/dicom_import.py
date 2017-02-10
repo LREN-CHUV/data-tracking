@@ -52,7 +52,7 @@ def dicom2db(file_path, file_type, is_copy, step_id, db_conn):
         sequence_type_id = _extract_sequence_type(ds)
         sequence_id = _extract_sequence(session_id, sequence_type_id)
         repetition_id = _extract_repetition(ds, sequence_id)
-        file_id = _extract_dicom(file_path, file_type, is_copy, repetition_id, step_id)
+        file_id = extract_dicom(file_path, file_type, is_copy, repetition_id, step_id)
         return {'participant_id': participant_id, 'scan_id': scan_id, 'session_id': session_id,
                 'sequence_type_id': sequence_type_id, 'sequence_id': sequence_id, 'repetition_id': repetition_id,
                 'file_id': file_id}
@@ -61,6 +61,24 @@ def dicom2db(file_path, file_type, is_copy, step_id, db_conn):
     except IntegrityError:
         logging.warning("A problem occurred with the DB ! A rollback will be performed...")
         conn.db_session.rollback()
+
+
+def extract_dicom(path, file_type, is_copy, repetition_id, processing_step_id):
+    dcm = conn.db_session.query(conn.DataFile).filter_by(
+        path=path, repetition_id=repetition_id).first()
+
+    if not dcm:
+        dcm = conn.DataFile(
+            path=path,
+            type=file_type,
+            repetition_id=repetition_id,
+            processing_step_id=processing_step_id,
+            is_copy=is_copy
+        )
+        conn.db_session.add(dcm)
+        conn.db_session.commit()
+
+    return dcm.id
 
 
 ########################################################################################################################
@@ -389,21 +407,3 @@ def _extract_repetition(ds, sequence_id):
         conn.db_session.commit()
 
     return repetition.id
-
-
-def _extract_dicom(path, file_type, is_copy, repetition_id, processing_step_id):
-    dcm = conn.db_session.query(conn.DataFile).filter_by(
-        path=path, repetition_id=repetition_id).first()
-
-    if not dcm:
-        dcm = conn.DataFile(
-            path=path,
-            type=file_type,
-            repetition_id=repetition_id,
-            processing_step_id=processing_step_id,
-            is_copy=is_copy
-        )
-        conn.db_session.add(dcm)
-        conn.db_session.commit()
-
-    return dcm.id
