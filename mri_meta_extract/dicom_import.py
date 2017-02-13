@@ -1,27 +1,14 @@
-import dicom
+import dicom  # pydicom
 import datetime
 import logging
 
 from sqlalchemy.exc import IntegrityError
-from dicom.errors import InvalidDicomError
+from dicom.errors import InvalidDicomError  # pydicom.errors
 
 
 ########################################################################################################################
-# SETTINGS
+# GLOBAL VARIABLES
 ########################################################################################################################
-
-DEFAULT_HANDEDNESS = 'unknown'
-DEFAULT_ROLE = 'U'
-DEFAULT_GENDER = 'unknown'
-DEFAULT_PARTICIPANT_ID = 'unknown'
-DEFAULT_COMMENT = ''
-DEFAULT_SESSION_VALUE = 'unknown'
-DEFAULT_REPETITION = 0
-
-MALE_GENDER_LIST = ['m', 'male', 'man', 'boy']
-FEMALE_GENDER_LIST = ['f', 'female', 'woman', 'girl']
-MALE = 'male'
-FEMALE = 'female'
 
 conn = None
 
@@ -47,13 +34,16 @@ def dicom2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=Fal
     conn = db_conn
     try:
         logging.info("Extracting DICOM headers from '%s'" % file_path)
-        ds = dicom.read_file(file_path)
-        participant_id = _extract_participant(ds, DEFAULT_HANDEDNESS)
-        scan_id = _extract_scan(ds, participant_id, DEFAULT_ROLE, DEFAULT_COMMENT)
-        session_id = _extract_session(ds, scan_id, sid_by_patient)
-        sequence_type_id = _extract_sequence_type(ds)
+
+        dcm = dicom.read_file(file_path)
+        provenance_id = db_conn.get_provenance_id(step_id)
+
+        participant_id = _extract_participant(dcm, provenance_id)
+        scan_id = _extract_scan(dcm, provenance_id, participant_id)
+        session_id = _extract_session(dcm, scan_id, sid_by_patient)
+        sequence_type_id = _extract_sequence_type(dcm)
         sequence_id = _extract_sequence(session_id, sequence_type_id)
-        repetition_id = _extract_repetition(ds, sequence_id)
+        repetition_id = _extract_repetition(dcm, sequence_id)
         file_id = extract_dicom(file_path, file_type, is_copy, repetition_id, step_id)
         return {'participant_id': participant_id, 'scan_id': scan_id, 'session_id': session_id,
                 'sequence_type_id': sequence_type_id, 'sequence_id': sequence_id, 'repetition_id': repetition_id,
@@ -66,21 +56,25 @@ def dicom2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=Fal
 
 
 def extract_dicom(path, file_type, is_copy, repetition_id, processing_step_id):
-    dcm = conn.db_session.query(conn.DataFile).filter_by(
-        path=path, repetition_id=repetition_id).first()
+    df = conn.db_session.query(conn.DataFile).filter_by(path=path).one_or_none()
 
-    if not dcm:
-        dcm = conn.DataFile(
+    if not df:
+        df = conn.DataFile(
             path=path,
             type=file_type,
             repetition_id=repetition_id,
             processing_step_id=processing_step_id,
             is_copy=is_copy
         )
-        conn.db_session.add(dcm)
-        conn.db_session.commit()
+        conn.db_session.add(df)
+    else:
+        df.file_type = file_type
+        df.repetition_id = repetition_id
+        df.processing_step_id = processing_step_id
+        df.is_copy = is_copy
+    conn.db_session.commit()
 
-    return dcm.id
+    return df.id
 
 
 ########################################################################################################################
@@ -92,15 +86,6 @@ def _format_date(date):
         return datetime.datetime(int(date[:4]), int(date[4:6]), int(date[6:8]))
     except ValueError:
         logging.warning("Cannot parse date from : "+str(date))
-
-
-def _format_gender(gender):
-    if gender.lower() in MALE_GENDER_LIST:
-        return MALE
-    elif gender.lower() in FEMALE_GENDER_LIST:
-        return FEMALE
-    else:
-        return DEFAULT_GENDER
 
 
 def _format_age(age):
@@ -126,12 +111,12 @@ def _format_age(age):
 ########################################################################################################################
 
 
-def _extract_participant(ds, handedness):
+def _extract_participant(ds, provenance_id):
     try:
         participant_id = ds.PatientID
     except AttributeError:
         logging.warning("Patient ID was not found !")
-        participant_id = DEFAULT_PARTICIPANT_ID
+        participant_id = None
     try:
         participant_birth_date = _format_date(ds.PatientBirthDate)
     except AttributeError:
@@ -143,68 +128,82 @@ def _extract_participant(ds, handedness):
         logging.debug("Field PatientAge was not found")
         participant_age = None
     try:
-        participant_gender = _format_gender(ds.PatientSex)
+        participant_gender = ds.PatientSex
     except AttributeError:
         logging.debug("Field PatientSex was not found")
-        participant_gender = DEFAULT_GENDER
+        participant_gender = None
 
     participant = conn.db_session.query(
-        conn.Participant).filter_by(id=participant_id).first()
+        conn.Participant).filter_by(name=participant_id, provenance_id=provenance_id).one_or_none()
 
     if not participant:
         participant = conn.Participant(
-            id=participant_id,
+            name=participant_id,
             gender=participant_gender,
-            handedness=handedness,
             birthdate=participant_birth_date,
-            age=participant_age
+            age=participant_age,
+            provenance_id=provenance_id
         )
         conn.db_session.add(participant)
-        conn.db_session.commit()
+    else:
+        participant.gender = participant_gender
+        participant.birthdate = participant_birth_date
+        participant.age = participant_age
+    conn.db_session.commit()
 
     return participant.id
 
 
-def _extract_scan(ds, participant_id, role, comment):
+def _extract_scan(dcm, provenance_id, participant_id, by_patient=False):
     try:
-        scan_date = _format_date(ds.AcquisitionDate)
+        scan_date = _format_date(dcm.AcquisitionDate)
         if not scan_date:
             raise AttributeError
     except AttributeError:
-        scan_date = _format_date(ds.SeriesDate)  # If acquisition date is not available then we use the series date
+        scan_date = _format_date(dcm.SeriesDate)  # If acquisition date is not available then we use the series date
 
-    scan = conn.db_session.query(conn.Scan).filter_by(
-        participant_id=participant_id, date=scan_date).first()
+    try:
+        scan_id = str(dcm.StudyID)
+        if by_patient:
+            scan_id += str(dcm.PatientID)
+    except AttributeError:
+        logging.debug("Field StudyID was not found")
+        scan_id = None
+
+    scan = conn.db_session.query(conn.Scan).filter_by(name=scan_id, provenance_id=provenance_id).one_or_none()
 
     if not scan:
         scan = conn.Scan(
+            name=scan_id,
             date=scan_date,
-            role=role,
-            comment=comment,
-            participant_id=participant_id
+            participant_id=participant_id,
+            provenance_id=provenance_id
         )
         conn.db_session.add(scan)
-        conn.db_session.commit()
+    else:
+        scan.date = scan_date
+        scan.participant_id = participant_id
+    conn.db_session.commit()
 
     return scan.id
 
 
-def _extract_session(ds, scan_id, by_patient=False):
+def _extract_session(dcm, scan_id, by_patient=False):
     try:
-        session_value = str(ds.StudyID)
+        session_value = str(dcm.StudyID)
         if by_patient:
-            session_value += str(ds.PatientID)
+            session_value += str(dcm.PatientID)
     except AttributeError:
         logging.debug("Field StudyID was not found")
-        session_value = DEFAULT_SESSION_VALUE
+        session_value = None
 
     session = conn.db_session.query(conn.Session).filter_by(
-        scan_id=scan_id, value=session_value).first()
+        scan_id=scan_id, name=session_value).first()
 
     if not session:
         session = conn.Session(
             scan_id=scan_id,
-            value=session_value
+            name=session_value,
         )
         conn.db_session.add(session)
         conn.db_session.commit()
@@ -212,89 +211,92 @@ def _extract_session(ds, scan_id, by_patient=False):
     return session.id
 
 
-def _extract_sequence_type(ds):
+def _extract_sequence_type(dcm):
     try:
-        sequence_name = ds.ProtocolName
+        sequence_name = dcm.SeriesDescription  # It seems better to use this instead of ProtocolName
     except AttributeError:
-        logging.debug("Field ProtocolName was not found")
-        sequence_name = 'unknown'
+        logging.debug("Field SeriesDescription was not found")
+        try:
+            sequence_name = dcm.ProtocolName  # It seems better to use this instead of SeriesDescription
+        except AttributeError:
+            sequence_name = None
     try:
-        manufacturer = ds.Manufacturer
+        manufacturer = dcm.Manufacturer
     except AttributeError:
         logging.debug("Field Manufacturer was not found")
-        manufacturer = 'unknown'
+        manufacturer = None
     try:
-        manufacturer_model_name = ds.ManufacturerModelName
+        manufacturer_model_name = dcm.ManufacturerModelName
     except AttributeError:
         logging.debug("Field ManufacturerModelName was not found")
-        manufacturer_model_name = 'unknown'
+        manufacturer_model_name = None
     try:
-        institution_name = ds.InstitutionName
+        institution_name = dcm.InstitutionName
     except AttributeError:
         logging.debug("Field InstitutionName was not found")
-        institution_name = 'unknown'
+        institution_name = None
     try:
-        slice_thickness = float(ds.SliceThickness)
+        slice_thickness = float(dcm.SliceThickness)
     except (AttributeError, ValueError):
         logging.debug("Field SliceThickness was not found")
         slice_thickness = None
     try:
-        repetition_time = float(ds.RepetitionTime)
+        repetition_time = float(dcm.RepetitionTime)
     except (AttributeError, ValueError):
         logging.debug("Field RepetitionTime was not found")
         repetition_time = None
     try:
-        echo_time = float(ds.EchoTime)
+        echo_time = float(dcm.EchoTime)
     except (AttributeError, ValueError):
         logging.debug("Field EchoTime was not found")
         echo_time = None
     try:
-        number_of_phase_encoding_steps = int(ds.NumberOfPhaseEncodingSteps)
+        number_of_phase_encoding_steps = int(dcm.NumberOfPhaseEncodingSteps)
     except (AttributeError, ValueError):
         logging.debug("Field NumberOfPhaseEncodingSteps was not found")
         number_of_phase_encoding_steps = None
     try:
-        percent_phase_field_of_view = float(ds.PercentPhaseFieldOfView)
+        percent_phase_field_of_view = float(dcm.PercentPhaseFieldOfView)
     except (AttributeError, ValueError):
         logging.debug("Field PercentPhaseFieldOfView was not found")
         percent_phase_field_of_view = None
     try:
-        pixel_bandwidth = int(ds.PixelBandwidth)
+        pixel_bandwidth = int(dcm.PixelBandwidth)
     except (AttributeError, ValueError):
         logging.debug("Field PixelBandwidth was not found")
         pixel_bandwidth = None
     try:
-        flip_angle = float(ds.FlipAngle)
+        flip_angle = float(dcm.FlipAngle)
     except (AttributeError, ValueError):
         logging.debug("Field FlipAngle was not found")
         flip_angle = None
     try:
-        rows = int(ds.Rows)
+        rows = int(dcm.Rows)
     except (AttributeError, ValueError):
         logging.debug("Field Rows was not found")
         rows = None
     try:
-        columns = int(ds.Columns)
+        columns = int(dcm.Columns)
     except (AttributeError, ValueError):
         logging.debug("Field Columns was not found")
         columns = None
     try:
-        magnetic_field_strength = float(ds.MagneticFieldStrength)
+        magnetic_field_strength = float(dcm.MagneticFieldStrength)
     except (AttributeError, ValueError):
         logging.debug("Field MagneticFieldStrength was not found")
         magnetic_field_strength = None
     try:
-        echo_train_length = int(ds.EchoTrainLength)
+        echo_train_length = int(dcm.EchoTrainLength)
     except (AttributeError, ValueError):
         logging.debug("Field EchoTrainLength was not found")
         echo_train_length = None
     try:
-        percent_sampling = float(ds.PercentSampling)
+        percent_sampling = float(dcm.PercentSampling)
     except (AttributeError, ValueError):
         logging.debug("Field PercentSampling was not found")
         percent_sampling = None
     try:
-        pixel_spacing = ds.PixelSpacing
+        pixel_spacing = dcm.PixelSpacing
     except AttributeError:
         logging.debug("Field PixelSpacing was not found")
         pixel_spacing = None
@@ -309,12 +311,12 @@ def _extract_sequence_type(ds):
         logging.debug("Field pixel_spacing1 was not found")
         pixel_spacing_1 = None
     try:
-        echo_number = int(ds.EchoNumber)
+        echo_number = int(dcm.EchoNumber)
     except (AttributeError, ValueError):
         logging.debug("Field echo_number was not found")
         echo_number = None
     try:
-        space_between_slices = float(ds[0x0018, 0x0088].value)
+        space_between_slices = float(dcm[0x0018, 0x0088].value)
     except (AttributeError, ValueError, KeyError):
         logging.debug("Field space_between_slices was not found")
         space_between_slices = None
@@ -324,22 +326,42 @@ def _extract_sequence_type(ds):
         manufacturer=manufacturer,
         manufacturer_model_name=manufacturer_model_name,
         institution_name=institution_name,
+        slice_thickness=slice_thickness,
+        repetition_time=repetition_time,
+        echo_time=echo_time,
         echo_number=echo_number,
         number_of_phase_encoding_steps=number_of_phase_encoding_steps,
+        percent_phase_field_of_view=percent_phase_field_of_view,
         pixel_bandwidth=pixel_bandwidth,
+        flip_angle=flip_angle,
         rows=rows,
         columns=columns,
-        echo_train_length=echo_train_length
+        magnetic_field_strength=magnetic_field_strength,
+        space_between_slices=space_between_slices,
+        echo_train_length=echo_train_length,
+        percent_sampling=percent_sampling,
+        pixel_spacing_0=pixel_spacing_0,
+        pixel_spacing_1=pixel_spacing_1
     ).all()
 
     sequence_type_list = list(filter(lambda s: not (
-        str(s.slice_thickness) != str(slice_thickness)
+        str(s.name) != str(sequence_name)
+        or str(s.manufacturer) != str(manufacturer)
+        or str(s.manufacturer_model_name) != str(manufacturer_model_name)
+        or str(s.institution_name) != str(institution_name)
+        or str(s.slice_thickness) != str(slice_thickness)
         or str(s.repetition_time) != str(repetition_time)
         or str(s.echo_time) != str(echo_time)
+        or str(s.echo_number) != str(echo_number)
+        or str(s.number_of_phase_encoding_steps) != str(number_of_phase_encoding_steps)
         or str(s.percent_phase_field_of_view) != str(percent_phase_field_of_view)
+        or str(s.pixel_bandwidth) != str(pixel_bandwidth)
         or str(s.flip_angle) != str(flip_angle)
+        or str(s.rows) != str(rows)
+        or str(s.columns) != str(columns)
         or str(s.magnetic_field_strength) != str(magnetic_field_strength)
-        or str(s.flip_angle) != str(flip_angle)
+        or str(s.space_between_slices) != str(space_between_slices)
+        or str(s.echo_train_length) != str(echo_train_length)
         or str(s.percent_sampling) != str(percent_sampling)
         or str(s.pixel_spacing_0) != str(pixel_spacing_0)
         or str(s.pixel_spacing_1) != str(pixel_spacing_1)
@@ -377,37 +399,49 @@ def _extract_sequence_type(ds):
 
 
 def _extract_sequence(session_id, sequence_type_id):
-    sequence = conn.db_session.query(conn.Sequence)\
-        .filter_by(session_id=session_id, sequence_type_id=sequence_type_id)\
-        .first()
+    name = conn.db_session.query(conn.SequenceType).filter_by(id=sequence_type_id).one_or_none().name
+    sequence = conn.db_session.query(conn.Sequence).filter_by(session_id=session_id, name=name).one_or_none()
 
     if not sequence:
         sequence = conn.Sequence(
+            name=name,
             session_id=session_id,
-            sequence_type_id=sequence_type_id
+            sequence_type_id=sequence_type_id,
         )
         conn.db_session.add(sequence)
-        conn.db_session.commit()
+
+    else:
+        sequence.sequence_type_id = sequence_type_id
+    conn.db_session.commit()
 
     return sequence.id
 
 
-def _extract_repetition(ds, sequence_id):
+def _extract_repetition(dcm, sequence_id):
     try:
-        repetition_value = int(ds.SeriesNumber)
+        repetition_value = int(dcm.SeriesNumber)
     except AttributeError:
         logging.warning("Field SeriesNumber was not found")
-        repetition_value = DEFAULT_REPETITION
+        repetition_value = None
+    try:
+        series_date = _format_date(dcm.SeriesDate)
+        if not series_date:
+            raise AttributeError
+    except AttributeError:
+        series_date = None
 
     repetition = conn.db_session.query(conn.Repetition).filter_by(
-        sequence_id=sequence_id, value=repetition_value).first()
+        sequence_id=sequence_id, number=repetition_value).one_or_none()
 
     if not repetition:
         repetition = conn.Repetition(
             sequence_id=sequence_id,
-            value=repetition_value
+            number=repetition_value,
+            date=series_date
         )
         conn.db_session.add(repetition)
-        conn.db_session.commit()
+    else:
+        repetition.date = series_date
+    conn.db_session.commit()
 
     return repetition.id

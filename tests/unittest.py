@@ -43,8 +43,8 @@ class TestFilesRecording:
 
         # Visit DICOM files
         acquisition_step_id = files_recording.visit(
-            'ACQUISITION', './data/dcm/', provenance_id, db_url=DB_URL)
-        assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 3)
+            'ACQUISITION', './data/dcm/', provenance_id, db_url=DB_URL, sid_by_patient=True)
+        assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 4)
 
         # Create a provenance with some fake Matlab and SPM version numbers
         provenance_id = files_recording.create_provenance(
@@ -53,8 +53,9 @@ class TestFilesRecording:
 
         # Visit NIFTI files
         files_recording.visit(
-            'DICOM2NIFTI', './data/nii/', provenance_id, previous_step_id=acquisition_step_id, db_url=DB_URL)
-        assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 6)
+            'DICOM2NIFTI', './data/nii/', provenance_id, previous_step_id=acquisition_step_id, db_url=DB_URL,
+            sid_by_patient=True)
+        assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 7)
 
         # A few more things to check
         assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).filter_by(type='DICOM').count(), 3)
@@ -71,8 +72,8 @@ class TestFilesRecording:
 
         # Visit DICOM files
         acquisition_step_id = files_recording.visit(
-            'ACQUISITION', './data/dcm/', provenance_id, db_url=DB_URL)
-        assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 6)
+            'ACQUISITION', './data/dcm/', provenance_id, db_url=DB_URL, sid_by_patient=True)
+        assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 7)
 
         # Create a provenance with some fake Matlab and SPM version numbers
         provenance_id = files_recording.create_provenance(
@@ -81,8 +82,9 @@ class TestFilesRecording:
 
         # Visit NIFTI files
         files_recording.visit(
-            'DICOM2NIFTI', './data/nii/', provenance_id, previous_step_id=acquisition_step_id, db_url=DB_URL)
-        assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 6)
+            'DICOM2NIFTI', './data/nii/', provenance_id, previous_step_id=acquisition_step_id, db_url=DB_URL,
+            sid_by_patient=True)
+        assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 7)
 
         # A few more things to check
         assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).filter_by(type='DICOM').count(), 3)
@@ -100,7 +102,7 @@ class TestFilesRecording:
         # Visit various files
         files_recording.visit(
             'SPECIAL', './data/any/', provenance_id, previous_step_id=1, db_url=DB_URL)
-        assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 7)
+        assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 8)
 
         # A few more things to check
         assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).filter_by(type='DICOM').count(), 4)

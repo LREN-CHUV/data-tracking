@@ -29,3 +29,6 @@ class Connection:
 
     def close(self):
         self.db_session.close()
+
+    def get_provenance_id(self, step_id):
+        return self.db_session.query(self.ProcessingStep).filter_by(id=step_id).first().provenance_id

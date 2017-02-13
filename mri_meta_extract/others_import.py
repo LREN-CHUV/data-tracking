@@ -5,7 +5,7 @@ import logging
 # PUBLIC FUNCTIONS
 ########################################################################################################################
 
-def nifti2db(file_path, file_type, is_copy, step_id, db_conn):
+def others2db(file_path, file_type, is_copy, step_id, db_conn):
     """
     Extract some meta-data from NIFTI files (actually mostly from their paths) and stores it in a DB.
     :param file_path: File path.
@@ -28,5 +28,3 @@ def nifti2db(file_path, file_type, is_copy, step_id, db_conn):
         )
         db_conn.db_session.add(df)
         db_conn.db_session.commit()
-
-    # TODO: import more (we need proper input for that... Let's wait for BIDS !)
