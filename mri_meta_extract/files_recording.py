@@ -25,7 +25,8 @@ HASH_BLOCK_SIZE = 65536  # Avoid getting out of memory when hashing big files
 # PUBLIC FUNCTIONS
 ########################################################################################################################
 
-def visit(step_name, folder, provenance_id, previous_step_id=None, boost=True, db_url=None, sid_by_patient=False):
+def visit(step_name, folder, provenance_id, previous_step_id=None, boost=True, db_url=None, sid_by_patient=False,
+          pid_in_vid=False):
     """
     Record all files from a folder into the database.
     If a file has been copied from a previous processing step without any transformation, it will be detected and marked
@@ -41,6 +42,8 @@ def visit(step_name, folder, provenance_id, previous_step_id=None, boost=True, d
     :param db_url: (optional) Database URL. If not defined, it looks for an Airflow configuration file.
     :param sid_by_patient: Rarely, a data set might use study IDs which are unique by patient (not for the whole study).
     E.g.: LREN data. In such a case, you have to enable this flag. This will use PatientID + StudyID as a session ID.
+    :param pid_in_vid: Rarely, a data set might mix patient IDs and visit IDs. E.g. : LREN data. In such a case, you
+    to enable this flag. This will try to split PatientID into VisitID and PatientID.
     :return: return processing step ID.
     """
     logging.info("Connecting to database...")

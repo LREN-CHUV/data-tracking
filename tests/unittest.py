@@ -43,7 +43,7 @@ class TestFilesRecording:
 
         # Visit DICOM files
         acquisition_step_id = files_recording.visit(
-            'ACQUISITION', './data/dcm/', provenance_id, db_url=DB_URL, sid_by_patient=True)
+            'ACQUISITION', './data/dcm/', provenance_id, db_url=DB_URL, sid_by_patient=True, pid_in_vid=True)
         assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 4)
 
         # Create a provenance with some fake Matlab and SPM version numbers
@@ -54,7 +54,7 @@ class TestFilesRecording:
         # Visit NIFTI files
         files_recording.visit(
             'DICOM2NIFTI', './data/nii/', provenance_id, previous_step_id=acquisition_step_id, db_url=DB_URL,
-            sid_by_patient=True)
+            sid_by_patient=True, pid_in_vid=True)
         assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 7)
 
         # A few more things to check
@@ -72,7 +72,7 @@ class TestFilesRecording:
 
         # Visit DICOM files
         acquisition_step_id = files_recording.visit(
-            'ACQUISITION', './data/dcm/', provenance_id, db_url=DB_URL, sid_by_patient=True)
+            'ACQUISITION', './data/dcm/', provenance_id, db_url=DB_URL, sid_by_patient=True, pid_in_vid=True)
         assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 7)
 
         # Create a provenance with some fake Matlab and SPM version numbers
@@ -83,7 +83,7 @@ class TestFilesRecording:
         # Visit NIFTI files
         files_recording.visit(
             'DICOM2NIFTI', './data/nii/', provenance_id, previous_step_id=acquisition_step_id, db_url=DB_URL,
-            sid_by_patient=True)
+            sid_by_patient=True, pid_in_vid=True)
         assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 7)
 
         # A few more things to check

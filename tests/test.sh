@@ -10,7 +10,7 @@ sleep 5  # TODO: replace this by a test
 
 # Run unit tests
 echo "Running unit tests..."
-nosetests -vs unittest.py
+nosetests unittest.py
 ret=$?
 
 # Remove DB container (if not on CircleCI)

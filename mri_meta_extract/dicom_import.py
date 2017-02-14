@@ -1,6 +1,7 @@
 import dicom  # pydicom
 import datetime
 import logging
+import re
 
 from sqlalchemy.exc import IntegrityError
 from dicom.errors import InvalidDicomError  # pydicom.errors
@@ -17,7 +18,7 @@ conn = None
 # PUBLIC FUNCTIONS
 ########################################################################################################################
 
-def dicom2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=False):
+def dicom2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=False, pid_in_vid=False):
     """
     Extract some meta-data from a DICOM file and store in a DB.
     :param file_path: File path.
@@ -27,6 +28,8 @@ def dicom2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=Fal
     :param db_conn: Database connection.
     :param sid_by_patient: Rarely, a data set might use study IDs which are unique by patient (not for the whole study).
     E.g.: LREN data. In such a case, you have to enable this flag. This will use PatientID + StudyID as a session ID.
+    :param pid_in_vid: Rarely, a data set might mix patient IDs and visit IDs. E.g. : LREN data. In such a case, you
+    to enable this flag. This will try to split PatientID into VisitID and PatientID.
     :return: A dictionary containing the following IDs : participant_id, scan_id, session_id, sequence_type_id,
     sequence_id, repetition_id, file_id.
     """
@@ -38,8 +41,8 @@ def dicom2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=Fal
         dcm = dicom.read_file(file_path)
         provenance_id = db_conn.get_provenance_id(step_id)
 
-        participant_id = _extract_participant(dcm, provenance_id)
-        scan_id = _extract_scan(dcm, provenance_id, participant_id)
+        participant_id = _extract_participant(dcm, provenance_id, pid_in_vid)
+        scan_id = _extract_scan(dcm, provenance_id, participant_id, pid_in_vid)
         session_id = _extract_session(dcm, scan_id, sid_by_patient)
         sequence_type_id = _extract_sequence_type(dcm)
         sequence_id = _extract_sequence(session_id, sequence_type_id)
@@ -106,29 +109,38 @@ def _format_age(age):
         logging.warning("Cannot parse age from : "+str(age))
 
 
+def _split_patient_id(participant_id):
+    res = re.split("_", participant_id)
+    if len(res) == 2:
+        return res
+
+
 ########################################################################################################################
 # PRIVATE EXTRACTION FUNCTION
 ########################################################################################################################
 
 
-def _extract_participant(ds, provenance_id):
+def _extract_participant(dcm, provenance_id, pid_in_vid=False):
     try:
-        participant_id = ds.PatientID
+        participant_id = dcm.PatientID
+        if pid_in_vid:
+            participant_id = _split_patient_id(participant_id)[1]
+
     except AttributeError:
         logging.warning("Patient ID was not found !")
         participant_id = None
     try:
-        participant_birth_date = _format_date(ds.PatientBirthDate)
+        participant_birth_date = _format_date(dcm.PatientBirthDate)
     except AttributeError:
         logging.debug("Field PatientBirthDate was not found")
         participant_birth_date = None
     try:
-        participant_age = _format_age(ds.PatientAge)
+        participant_age = _format_age(dcm.PatientAge)
     except AttributeError:
         logging.debug("Field PatientAge was not found")
         participant_age = None
     try:
-        participant_gender = ds.PatientSex
+        participant_gender = dcm.PatientSex
     except AttributeError:
         logging.debug("Field PatientSex was not found")
         participant_gender = None
@@ -154,7 +166,7 @@ def _extract_participant(ds, provenance_id):
     return participant.id
 
 
-def _extract_scan(dcm, provenance_id, participant_id, by_patient=False):
+def _extract_scan(dcm, provenance_id, participant_id, by_patient=False, pid_in_vid=False):
     try:
         scan_date = _format_date(dcm.AcquisitionDate)
         if not scan_date:
@@ -162,13 +174,23 @@ def _extract_scan(dcm, provenance_id, participant_id, by_patient=False):
     except AttributeError:
         scan_date = _format_date(dcm.SeriesDate)  # If acquisition date is not available then we use the series date
 
-    try:
-        scan_id = str(dcm.StudyID)
-        if by_patient:
-            scan_id += str(dcm.PatientID)
-    except AttributeError:
-        logging.debug("Field StudyID was not found")
-        scan_id = None
+    scan_id = None
+    if pid_in_vid:
+        try:
+            patient_id = dcm.PatientID
+            if pid_in_vid:
+                scan_id = _split_patient_id(patient_id)[0]
+        except AttributeError:
+            logging.warning("Patient ID was not found !")
+            scan_id = None
+    if not pid_in_vid or not scan_id:
+        try:
+            scan_id = str(dcm.StudyID)
+            if by_patient:
+                scan_id += str(dcm.PatientID)
+        except AttributeError:
+            logging.debug("Field StudyID was not found")
+            scan_id = None
 
     scan = conn.db_session.query(conn.Scan).filter_by(name=scan_id, provenance_id=provenance_id).one_or_none()
 
