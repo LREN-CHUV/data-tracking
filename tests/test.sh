@@ -2,7 +2,7 @@
 
 # Start DB container
 echo "Starting DB container..."
-db_docker_id=$(docker run -d -p 5433:5432 hbpmip/data-catalog-db:5e169e1)
+db_docker_id=$(docker run -d -p 5433:5432 hbpmip/data-catalog-db:3c4e8d7)
 
 # Wait for DB to be ready
 echo "Waiting for DB to be ready..."
