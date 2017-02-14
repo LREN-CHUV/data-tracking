@@ -11,7 +11,6 @@ from . import connection
 from . import dicom_import
 from . import nifti_import
 from . import others_import
-from .lren_nifti_path_extractor import LRENNiftiPathExtractor
 
 
 ########################################################################################################################
@@ -52,7 +51,6 @@ def visit(step_name, folder, provenance_id, previous_step_id=None, boost=True, d
     step_id = _create_step(db_conn, step_name, provenance_id, previous_step_id)
 
     previous_files_hash = _get_files_hash_from_step(db_conn, previous_step_id)
-    nifti_path_extractor = LRENNiftiPathExtractor  # TODO: replace this to use BIDS
 
     checked = dict()
     for file_path in glob.iglob(os.path.join(folder, "**/*"), recursive=True):
