@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 
-# Start DB container
 echo "Starting DB container..."
-db_docker_id=$(docker run -d -p 5433:5432 hbpmip/data-catalog-db:3c4e8d7)
+db_docker_id=$(docker run -d -p 5433:5432 postgres)
+sleep 3  # TODO: replace this by a test
 
-# Wait for DB to be ready
-echo "Waiting for DB to be ready..."
-sleep 5  # TODO: replace this by a test
+echo "Searching for gateway IP..."
+GATEWAY_IP=$(ip addr | grep docker | grep inet | grep -Eo '[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*')
 
-# Run unit tests
+echo "Creating deploying schemas..."
+docker run --rm -e "DB_URL=postgresql://postgres:postgres@$GATEWAY_IP:5433/postgres" hbpmip/data-catalog-setup:1.3.2 upgrade head
+
 echo "Running unit tests..."
 nosetests unittest.py
 ret=$?
@@ -16,7 +17,6 @@ ret=$?
 # Remove DB container (if not on CircleCI)
 if [ -z "$CIRCLECI" ] || [ "$CIRCLECI" = false ] ; then
     echo "Removing DB container..."
-    docker kill ${db_docker_id}
     docker rm -f ${db_docker_id}
 fi
 
