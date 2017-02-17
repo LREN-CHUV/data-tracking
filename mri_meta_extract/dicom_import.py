@@ -30,7 +30,7 @@ def dicom2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=Fal
     E.g.: LREN data. In such a case, you have to enable this flag. This will use PatientID + StudyID as a session ID.
     :param pid_in_vid: Rarely, a data set might mix patient IDs and visit IDs. E.g. : LREN data. In such a case, you
     to enable this flag. This will try to split PatientID into VisitID and PatientID.
-    :return: A dictionary containing the following IDs : participant_id, scan_id, session_id, sequence_type_id,
+    :return: A dictionary containing the following IDs : participant_id, visit_id, session_id, sequence_type_id,
     sequence_id, repetition_id, file_id.
     """
     global conn
@@ -39,16 +39,16 @@ def dicom2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=Fal
         logging.info("Extracting DICOM headers from '%s'" % file_path)
 
         dcm = dicom.read_file(file_path)
-        provenance_id = db_conn.get_provenance_id(step_id)
+        dataset = db_conn.get_dataset(step_id)
 
-        participant_id = _extract_participant(dcm, provenance_id, pid_in_vid)
-        scan_id = _extract_scan(dcm, provenance_id, participant_id, pid_in_vid)
-        session_id = _extract_session(dcm, scan_id, sid_by_patient)
+        participant_id = _extract_participant(dcm, dataset, pid_in_vid)
+        visit_id = _extract_scan(dcm, dataset, participant_id, pid_in_vid)
+        session_id = _extract_session(dcm, visit_id, sid_by_patient)
         sequence_type_id = _extract_sequence_type(dcm)
         sequence_id = _extract_sequence(session_id, sequence_type_id)
         repetition_id = _extract_repetition(dcm, sequence_id)
         file_id = extract_dicom(file_path, file_type, is_copy, repetition_id, step_id)
-        return {'participant_id': participant_id, 'scan_id': scan_id, 'session_id': session_id,
+        return {'participant_id': participant_id, 'visit_id': visit_id, 'session_id': session_id,
                 'sequence_type_id': sequence_type_id, 'sequence_id': sequence_id, 'repetition_id': repetition_id,
                 'file_id': file_id}
     except InvalidDicomError:
@@ -120,7 +120,7 @@ def _split_patient_id(participant_id):
 ########################################################################################################################
 
 
-def _extract_participant(dcm, provenance_id, pid_in_vid=False):
+def _extract_participant(dcm, dataset, pid_in_vid=False):
     try:
         participant_id = dcm.PatientID
         if pid_in_vid:
@@ -145,28 +145,29 @@ def _extract_participant(dcm, provenance_id, pid_in_vid=False):
         logging.debug("Field PatientSex was not found")
         participant_gender = None
 
+    participant_id = conn.get_participant_id(participant_id, dataset)
+
     participant = conn.db_session.query(
-        conn.Participant).filter_by(name=participant_id, provenance_id=provenance_id).one_or_none()
+        conn.Participant).filter_by(id=participant_id).one_or_none()
 
     if not participant:
         participant = conn.Participant(
-            name=participant_id,
+            id=participant_id,
             gender=participant_gender,
-            birthdate=participant_birth_date,
+            birth_date=participant_birth_date,
             age=participant_age,
-            provenance_id=provenance_id
         )
         conn.db_session.add(participant)
     else:
         participant.gender = participant_gender
-        participant.birthdate = participant_birth_date
+        participant.birth_date = participant_birth_date
         participant.age = participant_age
     conn.db_session.commit()
 
     return participant.id
 
 
-def _extract_scan(dcm, provenance_id, participant_id, by_patient=False, pid_in_vid=False):
+def _extract_scan(dcm, dataset, participant_id, by_patient=False, pid_in_vid=False):
     try:
         scan_date = _format_date(dcm.AcquisitionDate)
         if not scan_date:
@@ -174,43 +175,44 @@ def _extract_scan(dcm, provenance_id, participant_id, by_patient=False, pid_in_v
     except AttributeError:
         scan_date = _format_date(dcm.SeriesDate)  # If acquisition date is not available then we use the series date
 
-    scan_id = None
+    visit_id = None
     if pid_in_vid:
         try:
             patient_id = dcm.PatientID
             if pid_in_vid:
-                scan_id = _split_patient_id(patient_id)[0]
+                visit_id = _split_patient_id(patient_id)[0]
         except AttributeError:
             logging.warning("Patient ID was not found !")
-            scan_id = None
-    if not pid_in_vid or not scan_id:
+            visit_id = None
+    if not pid_in_vid or not visit_id:
         try:
-            scan_id = str(dcm.StudyID)
+            visit_id = str(dcm.StudyID)
             if by_patient:
-                scan_id += str(dcm.PatientID)
+                visit_id += str(dcm.PatientID)
         except AttributeError:
             logging.debug("Field StudyID was not found")
-            scan_id = None
+            visit_id = None
 
-    scan = conn.db_session.query(conn.Scan).filter_by(name=scan_id, provenance_id=provenance_id).one_or_none()
+    visit_id = conn.get_visit_id(visit_id, dataset)
 
-    if not scan:
-        scan = conn.Scan(
-            name=scan_id,
+    visit = conn.db_session.query(conn.Visit).filter_by(id=visit_id).one_or_none()
+
+    if not visit:
+        visit = conn.Visit(
+            id=visit_id,
             date=scan_date,
             participant_id=participant_id,
-            provenance_id=provenance_id
         )
-        conn.db_session.add(scan)
+        conn.db_session.add(visit)
     else:
-        scan.date = scan_date
-        scan.participant_id = participant_id
+        visit.date = scan_date
+        visit.participant_id = participant_id
     conn.db_session.commit()
 
-    return scan.id
+    return visit.id
 
 
-def _extract_session(dcm, scan_id, by_patient=False):
+def _extract_session(dcm, visit_id, by_patient=False):
     try:
         session_value = str(dcm.StudyID)
         if by_patient:
@@ -220,11 +222,11 @@ def _extract_session(dcm, scan_id, by_patient=False):
         session_value = None
 
     session = conn.db_session.query(conn.Session).filter_by(
-        scan_id=scan_id, name=session_value).first()
+        visit_id=visit_id, name=session_value).first()
 
     if not session:
         session = conn.Session(
-            scan_id=scan_id,
+            visit_id=visit_id,
             name=session_value,
         )
         conn.db_session.add(session)
@@ -441,10 +443,10 @@ def _extract_sequence(session_id, sequence_type_id):
 
 def _extract_repetition(dcm, sequence_id):
     try:
-        repetition_value = int(dcm.SeriesNumber)
+        repetition_name = str(dcm.SeriesNumber)
     except AttributeError:
         logging.warning("Field SeriesNumber was not found")
-        repetition_value = None
+        repetition_name = None
     try:
         series_date = _format_date(dcm.SeriesDate)
         if not series_date:
@@ -453,12 +455,12 @@ def _extract_repetition(dcm, sequence_id):
         series_date = None
 
     repetition = conn.db_session.query(conn.Repetition).filter_by(
-        sequence_id=sequence_id, number=repetition_value).one_or_none()
+        sequence_id=sequence_id, name=repetition_name).one_or_none()
 
     if not repetition:
         repetition = conn.Repetition(
             sequence_id=sequence_id,
-            number=repetition_value,
+            name=repetition_name,
             date=series_date
         )
         conn.db_session.add(repetition)

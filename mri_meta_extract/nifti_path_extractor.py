@@ -7,8 +7,8 @@ class NiftiPathExtractor(object):
         raise NotImplementedError("You should implement extract_participant_id")
 
     @staticmethod
-    def extract_scan_date(file_path):
-        raise NotImplementedError("You should implement extract_scan_date")
+    def extract_visit_date(file_path):
+        raise NotImplementedError("You should implement extract_visit_date")
 
     @staticmethod
     def extract_session(file_path):
