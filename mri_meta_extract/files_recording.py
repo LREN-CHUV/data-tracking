@@ -60,7 +60,7 @@ def visit(step_name, folder, provenance_id, previous_step_id=None, boost=True, d
             is_copy = _hash_file(file_path) in previous_files_hash
             leaf_folder = os.path.split(file_path)[0]
             if leaf_folder not in checked or not boost:
-                ret = dicom_import.dicom2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient)
+                ret = dicom_import.dicom2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient, pid_in_vid)
                 checked[leaf_folder] = ret['repetition_id']
             else:
                 dicom_import.extract_dicom(file_path, file_type, is_copy, checked[leaf_folder], step_id)
