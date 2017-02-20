@@ -128,7 +128,6 @@ def _extract_participant(dcm, dataset, pid_in_vid=False):
                 participant_id = _split_patient_id(participant_id)[1]
             except TypeError:
                 pass
-
     except AttributeError:
         logging.warning("Patient ID was not found !")
         participant_id = None
