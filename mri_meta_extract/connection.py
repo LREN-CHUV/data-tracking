@@ -63,11 +63,46 @@ class Connection:
             return 0
 
     def get_visit_id(self, visit_name, dataset):
+        import logging
+        logging.basicConfig(level=logging.INFO)
+        logging.debug("VISIT : v_name=%s, ds=%s" % (str(visit_name), dataset))
         visit_name = str(visit_name)
         visit = self.db_session.query(self.VisitMapping).filter_by(
             dataset=dataset, name=visit_name).one_or_none()
         if not visit:
+            logging.debug("VISIT : visit was not found in db")
             visit = self.VisitMapping(dataset=dataset, name=visit_name, visit_id=self.new_visit_id())
             self.db_session.add(visit)
             self.db_session.commit()
+        logging.debug("returning visit_id "+str(visit.visit_id))
         return visit.visit_id
+
+    def get_session_id(self, session_name, visit_id):
+        session_name = str(session_name)
+        session = self.db_session.query(self.Session).filter_by(
+            name=session_name, visit_id=visit_id).one_or_none()
+        if not session:
+            session = self.Session(name=session_name, visit_id=visit_id)
+            self.db_session.add(session)
+            self.db_session.commit()
+        return session.id
+
+    def get_sequence_id(self, sequence_name, session_id):
+        sequence_name = str(sequence_name)
+        sequence = self.db_session.query(self.Sequence).filter_by(
+            name=sequence_name, session_id=session_id).one_or_none()
+        if not sequence:
+            sequence = self.Sequence(name=sequence_name, session_id=session_id)
+            self.db_session.add(sequence)
+            self.db_session.commit()
+        return sequence.id
+
+    def get_repetition_id(self, repetition_name, sequence_id):
+        repetition_name = str(repetition_name)
+        repetition = self.db_session.query(self.Repetition).filter_by(
+            name=repetition_name, sequence_id=sequence_id).one_or_none()
+        if not repetition:
+            repetition = self.Repetition(name=repetition_name, sequence_id=sequence_id)
+            self.db_session.add(repetition)
+            self.db_session.commit()
+        return repetition.id

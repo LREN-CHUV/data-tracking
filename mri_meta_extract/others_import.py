@@ -7,7 +7,7 @@ import logging
 
 def others2db(file_path, file_type, is_copy, step_id, db_conn):
     """
-    Extract some meta-data from NIFTI files (actually mostly from their paths) and stores it in a DB.
+    Extract some meta-data from files (actually mostly from their paths) and stores it in a DB.
     :param file_path: File path.
     :param file_type: File type.
     :param is_copy: Indicate if this file is a copy.
