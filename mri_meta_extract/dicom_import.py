@@ -1,7 +1,7 @@
 import dicom  # pydicom
 import logging
+import re
 
-from . import nifti_import
 from . import utils
 from sqlalchemy.exc import IntegrityError
 from dicom.errors import InvalidDicomError  # pydicom.errors
@@ -49,14 +49,14 @@ def dicom2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=Fal
 
         participant_id = _extract_participant(dcm, dataset, pid_in_vid)
         if visit_in_path:
-            visit_id = nifti_import.extract_scan(db_conn, file_path, pid_in_vid, sid_by_patient, dataset)
+            visit_id = _extract_visit_from_path(db_conn, file_path, pid_in_vid, sid_by_patient, dataset)
         else:
             visit_id = _extract_scan(dcm, dataset, participant_id, sid_by_patient, pid_in_vid)
         session_id = _extract_session(dcm, visit_id)
         sequence_type_id = _extract_sequence_type(dcm)
         sequence_id = _extract_sequence(session_id, sequence_type_id)
         if rep_in_path:
-            repetition_id = nifti_import.extract_repetition(db_conn, file_path, sequence_id)
+            repetition_id = _extract_repetition_from_path(db_conn, file_path, sequence_id)
         else:
             repetition_id = _extract_repetition(dcm, sequence_id)
         file_id = extract_dicom(file_path, file_type, is_copy, repetition_id, step_id)
@@ -429,3 +429,28 @@ def _extract_repetition(dcm, sequence_id):
     conn.db_session.commit()
 
     return repetition.id
+
+
+def _extract_visit_from_path(db_conn, file_path, pid_in_vid, by_patient, dataset):
+    participant_id = str(re.findall('/([^/]+?)/[^/]+?/[^/]+?/[^/]+?/[^/]+?\.dcm', file_path)[0])
+    visit_name = None
+    if pid_in_vid:  # If the patient ID and the visit ID are mixed into the PatientID field (e.g. LREN data)
+        try:
+            visit_name = utils.split_patient_id(participant_id)[0]
+        except TypeError:
+            pass
+            visit_name = None
+    if not pid_in_vid or not visit_name:  # Otherwise, we use the StudyID (also used as a session ID) (e.g. PPMI data)
+        try:
+            visit_name = str(re.findall('/([^/]+?)/[^/]+?/[^/]+?/[^/]+?\.dcm', file_path)[0])
+            if by_patient:  # If the Study ID is given at the patient level (e.g. LREN data), here is a little trick
+                visit_name += participant_id
+        except AttributeError:
+            logging.debug("Field StudyID was not found")
+            visit_name = None
+    return db_conn.get_visit_id(visit_name, dataset)
+
+
+def _extract_repetition_from_path(db_conn, file_path, sequence_id):
+    repetition_name = str(re.findall('/([^/]+?)/[^/]+?\.dcm', file_path)[0])
+    return db_conn.get_repetition_id(repetition_name, sequence_id)
