@@ -100,15 +100,15 @@ def extract_dicom(path, file_type, is_copy, repetition_id, processing_step_id):
 
 def _extract_participant(dcm, dataset, pid_in_vid=False):
     try:
-        participant_id = dcm.PatientID
+        participant_name = dcm.PatientID
         if pid_in_vid:
             try:
-                participant_id = utils.split_patient_id(participant_id)[1]
+                participant_name = utils.split_patient_id(participant_name)[1]
             except TypeError:
                 pass
     except AttributeError:
         logging.warning("Patient ID was not found !")
-        participant_id = None
+        participant_name = None
     try:
         participant_birth_date = utils.format_date(dcm.PatientBirthDate)
     except AttributeError:
@@ -125,7 +125,7 @@ def _extract_participant(dcm, dataset, pid_in_vid=False):
         logging.debug("Field PatientSex was not found")
         participant_gender = None
 
-    participant_id = conn.get_participant_id(participant_id, dataset)
+    participant_id = conn.get_participant_id(participant_name, dataset)
 
     participant = conn.db_session.query(
         conn.Participant).filter_by(id=participant_id).one_or_none()
@@ -462,7 +462,7 @@ def _extract_visit_from_path(db_conn, dcm, file_path, pid_in_vid, by_patient, da
 
     visit_id = db_conn.get_visit_id(visit_name, dataset)
 
-    visit = db_conn.db_session.query(db_conn.Visit).filter_by(id=visit_name).one_or_none()
+    visit = db_conn.db_session.query(db_conn.Visit).filter_by(id=visit_id).one_or_none()
 
     if not visit:
         visit = db_conn.Visit(
