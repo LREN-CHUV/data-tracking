@@ -29,10 +29,10 @@ def nifti2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=Fal
 
         dataset = db_conn.get_dataset(step_id)
         _extract_participant(db_conn, file_path, pid_in_vid, dataset)
-        visit_id = _extract_scan(db_conn, file_path, pid_in_vid, sid_by_patient, dataset)
+        visit_id = extract_scan(db_conn, file_path, pid_in_vid, sid_by_patient, dataset)
         session_id = _extract_session(db_conn, file_path, visit_id)
         sequence_id = _extract_sequence(db_conn, file_path, session_id)
-        repetition_id = _extract_repetition(db_conn, file_path, sequence_id)
+        repetition_id = extract_repetition(db_conn, file_path, sequence_id)
 
         df = db_conn.DataFile(
             path=file_path,
@@ -44,27 +44,8 @@ def nifti2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=Fal
         db_conn.db_session.add(df)
         db_conn.db_session.commit()
 
-    # TODO: import more (we need proper input for that... Let's wait for BIDS !)
 
-
-########################################################################################################################
-# PRIVATE FUNCTIONS
-########################################################################################################################
-
-def _extract_participant(db_conn, file_path, pid_in_vid, dataset):
-    try:
-        participant_name = str(re.findall('/([^/]+?)/[^/]+?/[^/]+?/[^/]+?/[^/]+?\.nii', file_path)[0])
-        if pid_in_vid:
-            try:
-                participant_name = utils.split_patient_id(participant_name)[1]
-            except TypeError:
-                pass
-        return db_conn.get_participant_id(participant_name, dataset)
-    except IndexError:
-        logging.warning("Participant ID was not found !")
-
-
-def _extract_scan(db_conn, file_path, pid_in_vid, by_patient, dataset):
+def extract_scan(db_conn, file_path, pid_in_vid, by_patient, dataset):
     participant_id = str(re.findall('/([^/]+?)/[^/]+?/[^/]+?/[^/]+?/[^/]+?\.nii', file_path)[0])
     visit_name = None
     if pid_in_vid:  # If the patient ID and the visit ID are mixed into the PatientID field (e.g. LREN data)
@@ -84,6 +65,28 @@ def _extract_scan(db_conn, file_path, pid_in_vid, by_patient, dataset):
     return db_conn.get_visit_id(visit_name, dataset)
 
 
+def extract_repetition(db_conn, file_path, sequence_id):
+    repetition_name = str(re.findall('/([^/]+?)/[^/]+?\.nii', file_path)[0])
+    return db_conn.get_repetition_id(repetition_name, sequence_id)
+
+
+########################################################################################################################
+# PRIVATE FUNCTIONS
+########################################################################################################################
+
+def _extract_participant(db_conn, file_path, pid_in_vid, dataset):
+    try:
+        participant_name = str(re.findall('/([^/]+?)/[^/]+?/[^/]+?/[^/]+?/[^/]+?\.nii', file_path)[0])
+        if pid_in_vid:
+            try:
+                participant_name = utils.split_patient_id(participant_name)[1]
+            except TypeError:
+                pass
+        return db_conn.get_participant_id(participant_name, dataset)
+    except IndexError:
+        logging.warning("Participant ID was not found !")
+
+
 def _extract_session(db_conn, file_path, visit_id):
     try:
         session = str(re.findall('/([^/]+?)/[^/]+?/[^/]+?/[^/]+?\.nii', file_path)[0])
@@ -98,6 +101,4 @@ def _extract_sequence(db_conn, file_path, session_id):
     return db_conn.get_sequence_id(sequence_name, session_id)
 
 
-def _extract_repetition(db_conn, file_path, sequence_id):
-    repetition_name = str(re.findall('/([^/]+?)/[^/]+?\.nii', file_path)[0])
-    return db_conn.get_repetition_id(repetition_name, sequence_id)
+

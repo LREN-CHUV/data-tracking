@@ -1,6 +1,7 @@
 import dicom  # pydicom
 import logging
 
+from . import nifti_import
 from . import utils
 from sqlalchemy.exc import IntegrityError
 from dicom.errors import InvalidDicomError  # pydicom.errors
@@ -17,7 +18,9 @@ conn = None
 # PUBLIC FUNCTIONS
 ########################################################################################################################
 
-def dicom2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=False, pid_in_vid=False):
+
+def dicom2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=False, pid_in_vid=False,
+             visit_in_path=False, rep_in_path=False):
     """
     Extract some meta-data from a DICOM file and store in a DB.
     :param file_path: File path.
@@ -29,6 +32,10 @@ def dicom2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=Fal
     E.g.: LREN data. In such a case, you have to enable this flag. This will use PatientID + StudyID as a session ID.
     :param pid_in_vid: Rarely, a data set might mix patient IDs and visit IDs. E.g. : LREN data. In such a case, you
     to enable this flag. This will try to split PatientID into VisitID and PatientID.
+    :param visit_in_path: Enable this flag to get the visit ID from the folder hierarchy instead of DICOM meta-data
+    (e.g. can be useful for PPMI).
+    :param rep_in_path: Enable this flag to get the repetition ID from the folder hierarchy instead of DICOM meta-data
+    (e.g. can be useful for PPMI).
     :return: A dictionary containing the following IDs : participant_id, visit_id, session_id, sequence_type_id,
     sequence_id, repetition_id, file_id.
     """
@@ -41,11 +48,17 @@ def dicom2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=Fal
         dataset = db_conn.get_dataset(step_id)
 
         participant_id = _extract_participant(dcm, dataset, pid_in_vid)
-        visit_id = _extract_scan(dcm, dataset, participant_id, sid_by_patient, pid_in_vid)
+        if visit_in_path:
+            visit_id = nifti_import.extract_scan(db_conn, file_path, pid_in_vid, sid_by_patient, dataset)
+        else:
+            visit_id = _extract_scan(dcm, dataset, participant_id, sid_by_patient, pid_in_vid)
         session_id = _extract_session(dcm, visit_id)
         sequence_type_id = _extract_sequence_type(dcm)
         sequence_id = _extract_sequence(session_id, sequence_type_id)
-        repetition_id = _extract_repetition(dcm, sequence_id)
+        if rep_in_path:
+            repetition_id = nifti_import.extract_repetition(db_conn, file_path, sequence_id)
+        else:
+            repetition_id = _extract_repetition(dcm, sequence_id)
         file_id = extract_dicom(file_path, file_type, is_copy, repetition_id, step_id)
         return {'participant_id': participant_id, 'visit_id': visit_id, 'session_id': session_id,
                 'sequence_type_id': sequence_type_id, 'sequence_id': sequence_id, 'repetition_id': repetition_id,

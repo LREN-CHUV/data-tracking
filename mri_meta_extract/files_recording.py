@@ -25,7 +25,7 @@ HASH_BLOCK_SIZE = 65536  # Avoid getting out of memory when hashing big files
 ########################################################################################################################
 
 def visit(step_name, folder, provenance_id, previous_step_id=None, boost=True, db_url=None, sid_by_patient=False,
-          pid_in_vid=False):
+          pid_in_vid=False, visit_in_path=False, rep_in_path=False):
     """
     Record all files from a folder into the database.
     If a file has been copied from a previous processing step without any transformation, it will be detected and marked
@@ -43,6 +43,10 @@ def visit(step_name, folder, provenance_id, previous_step_id=None, boost=True, d
     E.g.: LREN data. In such a case, you have to enable this flag. This will use PatientID + StudyID as a session ID.
     :param pid_in_vid: Rarely, a data set might mix patient IDs and visit IDs. E.g. : LREN data. In such a case, you
     to enable this flag. This will try to split PatientID into VisitID and PatientID.
+    :param visit_in_path: Enable this flag to get the visit ID from the folder hierarchy instead of DICOM meta-data
+    (e.g. can be useful for PPMI).
+    :param rep_in_path: Enable this flag to get the repetition ID from the folder hierarchy instead of DICOM meta-data
+    (e.g. can be useful for PPMI).
     :return: return processing step ID.
     """
     logging.info("Connecting to database...")
@@ -60,7 +64,8 @@ def visit(step_name, folder, provenance_id, previous_step_id=None, boost=True, d
             is_copy = _hash_file(file_path) in previous_files_hash
             leaf_folder = os.path.split(file_path)[0]
             if leaf_folder not in checked or not boost:
-                ret = dicom_import.dicom2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient, pid_in_vid)
+                ret = dicom_import.dicom2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient, pid_in_vid,
+                                            visit_in_path, rep_in_path)
                 checked[leaf_folder] = ret['repetition_id']
             else:
                 dicom_import.extract_dicom(file_path, file_type, is_copy, checked[leaf_folder], step_id)
