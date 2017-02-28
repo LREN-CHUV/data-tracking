@@ -63,18 +63,13 @@ class Connection:
             return 0
 
     def get_visit_id(self, visit_name, dataset):
-        import logging
-        logging.basicConfig(level=logging.INFO)
-        logging.debug("VISIT : v_name=%s, ds=%s" % (str(visit_name), dataset))
         visit_name = str(visit_name)
         visit = self.db_session.query(self.VisitMapping).filter_by(
             dataset=dataset, name=visit_name).one_or_none()
         if not visit:
-            logging.debug("VISIT : visit was not found in db")
             visit = self.VisitMapping(dataset=dataset, name=visit_name, visit_id=self.new_visit_id())
             self.db_session.add(visit)
             self.db_session.commit()
-        logging.debug("returning visit_id "+str(visit.visit_id))
         return visit.visit_id
 
     def get_session_id(self, session_name, visit_id):
