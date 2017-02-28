@@ -89,7 +89,6 @@ def _extract_visit(db_conn, file_path, pid_in_vid, by_patient, dataset):
         try:
             visit_name = utils.split_patient_id(participant_name)[0]
         except TypeError:
-            pass
             visit_name = None
     if not pid_in_vid or not visit_name:  # Otherwise, we use the StudyID (also used as a session ID) (e.g. PPMI data)
         try:
