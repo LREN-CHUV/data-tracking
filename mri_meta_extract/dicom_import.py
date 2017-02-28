@@ -148,26 +148,26 @@ def _extract_participant(dcm, dataset, pid_in_vid=False):
 
 
 def _extract_visit(dcm, dataset, participant_id, by_patient=False, pid_in_vid=False):
-    visit_id = None
+    visit_name = None
     if pid_in_vid:  # If the patient ID and the visit ID are mixed into the PatientID field (e.g. LREN data)
         try:
             patient_id = dcm.PatientID
             if pid_in_vid:
                 try:
-                    visit_id = utils.split_patient_id(patient_id)[0]
+                    visit_name = utils.split_patient_id(patient_id)[0]
                 except TypeError:
                     pass
         except AttributeError:
             logging.warning("Patient ID was not found !")
-            visit_id = None
-    if not pid_in_vid or not visit_id:  # Otherwise, we use the StudyID (also used as a session ID) (e.g. PPMI data)
+            visit_name = None
+    if not pid_in_vid or not visit_name:  # Otherwise, we use the StudyID (also used as a session ID) (e.g. PPMI data)
         try:
-            visit_id = str(dcm.StudyID)
+            visit_name = str(dcm.StudyID)
             if by_patient:  # If the Study ID is given at the patient level (e.g. LREN data), here is a little trick
-                visit_id += str(dcm.PatientID)
+                visit_name = str(dcm.PatientID) + "_" + visit_name
         except AttributeError:
             logging.debug("Field StudyID was not found")
-            visit_id = None
+            visit_name = None
     try:
         scan_date = utils.format_date(dcm.AcquisitionDate)
         if not scan_date:
@@ -175,7 +175,7 @@ def _extract_visit(dcm, dataset, participant_id, by_patient=False, pid_in_vid=Fa
     except AttributeError:
         scan_date = utils.format_date(dcm.SeriesDate)  # If acquisition date is missing, we use the series date
 
-    visit_id = conn.get_visit_id(visit_id, dataset)
+    visit_id = conn.get_visit_id(visit_name, dataset)
 
     visit = conn.db_session.query(conn.Visit).filter_by(id=visit_id).one_or_none()
 
@@ -449,7 +449,7 @@ def _extract_visit_from_path(dcm, file_path, pid_in_vid, by_patient, dataset, pa
         try:
             visit_name = str(re.findall('/([^/]+?)/[^/]+?/[^/]+?/[^/]+?\.dcm', file_path)[0])
             if by_patient:  # If the Study ID is given at the patient level (e.g. LREN data), here is a little trick
-                visit_name += dcm.PatientID
+                visit_name = dcm.PatientID + "_" + visit_name
         except AttributeError:
             logging.debug("Field StudyID or PatientID was not found")
             visit_name = None

@@ -95,7 +95,7 @@ def _extract_visit(db_conn, file_path, pid_in_vid, by_patient, dataset):
         try:
             visit_name = str(re.findall('/([^/]+?)/[^/]+?/[^/]+?/[^/]+?\.nii', file_path)[0])
             if by_patient:  # If the Study ID is given at the patient level (e.g. LREN data), here is a little trick
-                visit_name += participant_name
+                visit_name = participant_name + "_" + visit_name
         except AttributeError:
             logging.debug("Field StudyID was not found")
             visit_name = None
