@@ -8,7 +8,6 @@ twine upload dist/*
 
 # Notify on slack
 set -e
-
 get_script_dir () {
      SOURCE="${BASH_SOURCE[0]}"
 

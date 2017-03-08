@@ -21,7 +21,7 @@ Create a provenance entity using :
 
 ::
 
-    create_provenance(dataset, matlab_version=None, spm_version=None, spm_revision=None, fn_called=None, fn_version=None, others=None, db_url=None)
+    create_provenance(dataset, software_versions, db_url)
 
     Create (or get if already exists) a provenance entity, store it in the database and get back a provenance ID.
     * param dataset: Name of the data set.
@@ -40,7 +40,7 @@ Scan a folder to populate the database :
 
 ::
 
-    def visit(step_name, folder, provenance_id, previous_step_id=None, boost=True, db_url=None)
+    def visit(folder, provenance_id, step_name, previous_step_id, config, db_url)
 
     Record all files from a folder into the database.
     The files are listed in the DB. If a file has been copied from previous step without any transformation, it will be
