@@ -25,12 +25,14 @@ Create a provenance entity using :
 
     Create (or get if already exists) a provenance entity, store it in the database and get back a provenance ID.
     * param dataset: Name of the data set.
-    * param matlab_version: (optional) Matlab version.
-    * param spm_version: (optional) SPM version.
-    * param spm_revision: (optional) SPM revision.
-    * param fn_called: (optional) Function called.
-    * param fn_version: (optional) Function version.
-    * param others: (optional) Any other information can be set using this field.
+    * param software_versions: (optional) Version of the software components used to get the data. It is a dictionary
+    that accepts the following fields:
+        - matlab_version
+        - spm_version
+        - spm_revision
+        - fn_called
+        - fn_version
+        - others
     * param db_url: (optional) Database URL. If not defined, it looks for an Airflow configuration file.
     * return: Provenance ID.
 
@@ -44,22 +46,23 @@ Scan a folder to populate the database :
     The files are listed in the DB. If a file has been copied from previous step without any transformation, it will be
     detected and marked in the DB. The type of file will be detected and stored in the DB. If a files (e.g. a DICOM
     file) contains some meta-data, those will be stored in the DB.
-    * param step_name: Name of the processing step that produced the folder to visit.
     * param folder: folder path.
     * param provenance_id: provenance label.
+    * param step_name: Name of the processing step that produced the folder to visit.
     * param previous_step_id: (optional) previous processing step ID. If not defined, we assume this is the first
     processing step.
-    * param boost: (optional) When enabled, we consider that all the files from a same folder share the same meta-data.
-    When enabled, the processing is (about 2 times) faster. This option is enabled by default.
-    * param db_url: (optional) Database URL. If not defined, it looks for an Airflow configuration file.
-    * param sid_by_patient: Rarely, a data set might use study IDs which are unique by patient (not for the whole study).
-    E.g.: LREN data. In such a case, you have to enable this flag. This will use PatientID + StudyID as a session ID.
-    * param pid_in_vid: Rarely, a data set might mix patient IDs and visit IDs. E.g. : LREN data. In such a case, you
-    to enable this flag. This will try to split PatientID into VisitID and PatientID.
-    * param visit_in_path: Enable this flag to get the visit ID from the folder hierarchy instead of DICOM meta-data
-    (e.g. can be useful for PPMI).
-    * param rep_in_path: Enable this flag to get the repetition ID from the folder hierarchy instead of DICOM meta-data
-    (e.g. can be useful for PPMI).
+    * param config: Many settings. It is a dictionary that accepts the following fields:
+        - boost: (optional) When enabled, we consider that all the files from a same folder share the same meta-data.
+        When enabled, the processing is (about 2 times) faster. This option is enabled by default.
+        - sid_by_patient: Rarely, a data set might use study IDs which are unique by patient (not for the whole study).
+        E.g.: LREN data. In such a case, you have to enable this flag. This will use PatientID + StudyID as a session ID.
+        - pid_in_vid: Rarely, a data set might mix patient IDs and visit IDs. E.g. : LREN data. In such a case, you
+        to enable this flag. This will try to split PatientID into VisitID and PatientID.
+        - visit_in_path: Enable this flag to get the visit ID from the folder hierarchy instead of DICOM meta-data
+        (e.g. can be useful for PPMI).
+        - rep_in_path: Enable this flag to get the repetition ID from the folder hierarchy instead of DICOM meta-data
+        (e.g. can be useful for PPMI).
+    :param db_url: (optional) Database URL. If not defined, it looks for an Airflow configuration file.
     * return: return processing step ID.
 
 Build

@@ -42,19 +42,20 @@ class TestFilesRecording:
         assert_equal(self.db_conn.db_session.query(self.db_conn.Provenance).count(), 1)
 
         # Visit DICOM files
-        acquisition_step_id = files_recording.visit(
-            'ACQUISITION', './data/dcm/', provenance_id, db_url=DB_URL, sid_by_patient=True, pid_in_vid=True)
+        acquisition_step_id = files_recording.visit('./data/dcm/', provenance_id, 'ACQUISITION',
+                                                    config={'sid_by_patient': True, 'pid_in_vid': True}, db_url=DB_URL)
         assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 4)
 
         # Create a provenance with some fake Matlab and SPM version numbers
-        provenance_id = files_recording.create_provenance(
-            'TEST_DATA', matlab_version='2016R', spm_version='v12', db_url=DB_URL)
+        provenance_id = files_recording.create_provenance('TEST_DATA',
+                                                          software_versions={
+                                                              'matlab_version': '2016R', 'spm_version': 'v12'},
+                                                          db_url=DB_URL)
         assert_equal(self.db_conn.db_session.query(self.db_conn.Provenance).count(), 2)
 
         # Visit NIFTI files
-        files_recording.visit(
-            'DICOM2NIFTI', './data/nii/', provenance_id, previous_step_id=acquisition_step_id, db_url=DB_URL,
-            sid_by_patient=True, pid_in_vid=True)
+        files_recording.visit('./data/nii/', provenance_id, 'DICOM2NIFTI', acquisition_step_id,
+                              config={'sid_by_patient': True, 'pid_in_vid': True}, db_url=DB_URL)
         assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 7)
 
         # A few more things to check
@@ -71,19 +72,20 @@ class TestFilesRecording:
         assert_equal(self.db_conn.db_session.query(self.db_conn.Provenance).count(), 2)
 
         # Visit DICOM files
-        acquisition_step_id = files_recording.visit(
-            'ACQUISITION', './data/dcm/', provenance_id, db_url=DB_URL, sid_by_patient=True, pid_in_vid=True)
+        acquisition_step_id = files_recording.visit('./data/dcm/', provenance_id, 'ACQUISITION',
+                                                    config={'sid_by_patient': True, 'pid_in_vid': True}, db_url=DB_URL)
         assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 7)
 
         # Create a provenance with some fake Matlab and SPM version numbers
-        provenance_id = files_recording.create_provenance(
-            'TEST_DATA', matlab_version='2016R', spm_version='v12', db_url=DB_URL)
+        provenance_id = files_recording.create_provenance('TEST_DATA',
+                                                          software_versions={
+                                                              'matlab_version': '2016R', 'spm_version': 'v12'},
+                                                          db_url=DB_URL)
         assert_equal(self.db_conn.db_session.query(self.db_conn.Provenance).count(), 2)
 
         # Visit NIFTI files
-        files_recording.visit(
-            'DICOM2NIFTI', './data/nii/', provenance_id, previous_step_id=acquisition_step_id, db_url=DB_URL,
-            sid_by_patient=True, pid_in_vid=True)
+        files_recording.visit('./data/nii/', provenance_id, 'DICOM2NIFTI', acquisition_step_id,
+                              config={'sid_by_patient': True, 'pid_in_vid': True}, db_url=DB_URL)
         assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 7)
 
         # A few more things to check
@@ -100,8 +102,7 @@ class TestFilesRecording:
         assert_equal(self.db_conn.db_session.query(self.db_conn.Provenance).count(), 3)
 
         # Visit various files
-        files_recording.visit(
-            'SPECIAL', './data/any/', provenance_id, previous_step_id=1, db_url=DB_URL)
+        files_recording.visit('./data/any/', provenance_id, 'SPECIAL', 1, db_url=DB_URL)
         assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 8)
 
         # A few more things to check
