@@ -8,7 +8,7 @@ echo "Searching for gateway IP..."
 GATEWAY_IP=$(ip addr | grep docker | grep inet | grep -Eo '[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*')
 
 echo "Creating deploying schemas..."
-docker run --rm -e "DB_URL=postgresql://postgres:postgres@$GATEWAY_IP:5433/postgres" hbpmip/data-catalog-setup:1.3.5 upgrade head
+docker run --rm -e "DB_URL=postgresql://postgres:postgres@$GATEWAY_IP:5433/postgres" hbpmip/data-catalog-setup:1.4.5 upgrade head
 
 echo "Running unit tests..."
 nosetests unittest.py

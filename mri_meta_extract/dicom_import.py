@@ -115,11 +115,6 @@ def _extract_participant(dcm, dataset, pid_in_vid=False):
         logging.debug("Field PatientBirthDate was not found")
         participant_birth_date = None
     try:
-        participant_age = utils.format_age(dcm.PatientAge)
-    except AttributeError:
-        logging.debug("Field PatientAge was not found")
-        participant_age = None
-    try:
         participant_gender = dcm.PatientSex
     except AttributeError:
         logging.debug("Field PatientSex was not found")
@@ -135,13 +130,11 @@ def _extract_participant(dcm, dataset, pid_in_vid=False):
             id=participant_id,
             gender=participant_gender,
             birth_date=participant_birth_date,
-            age=participant_age,
         )
         conn.db_session.add(participant)
     else:
         participant.gender = participant_gender
         participant.birth_date = participant_birth_date
-        participant.age = participant_age
     conn.db_session.commit()
 
     return participant.id
@@ -174,6 +167,11 @@ def _extract_visit(dcm, dataset, participant_id, by_patient=False, pid_in_vid=Fa
             raise AttributeError
     except AttributeError:
         scan_date = utils.format_date(dcm.SeriesDate)  # If acquisition date is missing, we use the series date
+    try:
+        participant_age = utils.format_age(dcm.PatientAge)
+    except AttributeError:
+        logging.debug("Field PatientAge was not found")
+        participant_age = None
 
     visit_id = conn.get_visit_id(visit_name, dataset)
 
@@ -184,11 +182,13 @@ def _extract_visit(dcm, dataset, participant_id, by_patient=False, pid_in_vid=Fa
             id=visit_id,
             date=scan_date,
             participant_id=participant_id,
+            patient_age=participant_age
         )
         conn.db_session.add(visit)
     else:
         visit.date = scan_date
         visit.participant_id = participant_id
+        visit.patient_age = participant_age
     conn.db_session.commit()
 
     return visit.id
