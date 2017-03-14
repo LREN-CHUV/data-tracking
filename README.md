@@ -1,6 +1,4 @@
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](https://github.com/LREN-CHUV/mri-meta-extract/blob/master/LICENSE)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/4547fb5d1e464e4087640e046893576a)](https://www.codacy.com/app/mirco-nasuti/mri-meta-extract?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=LREN-CHUV/mri-meta-extract&amp;utm_campaign=Badge_Grade)
-[![CircleCI](https://circleci.com/gh/LREN-CHUV/mri-meta-extract.svg?style=svg)](https://circleci.com/gh/LREN-CHUV/mri-meta-extract)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](https://github.com/LREN-CHUV/mri-meta-extract/blob/master/LICENSE) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/4547fb5d1e464e4087640e046893576a)](https://www.codacy.com/app/mirco-nasuti/mri-meta-extract?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=LREN-CHUV/mri-meta-extract&amp;utm_campaign=Badge_Grade) [![Code Health](https://landscape.io/github/LREN-CHUV/airflow-imaging-plugins/master/landscape.svg?style=flat)](https://landscape.io/LREN-CHUV/airflow-imaging-plugins/master) [![CircleCI](https://circleci.com/gh/LREN-CHUV/mri-meta-extract.svg?style=svg)](https://circleci.com/gh/LREN-CHUV/mri-meta-extract)
 
 # MRI Meta-data Extractor
 
