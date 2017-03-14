@@ -24,7 +24,7 @@ HASH_BLOCK_SIZE = 65536  # Avoid getting out of memory when hashing big files
 # PUBLIC FUNCTIONS
 ########################################################################################################################
 
-def visit(folder, provenance_id, step_name, previous_step_id=None, config=list(), db_url=None):
+def visit(folder, provenance_id, step_name, previous_step_id=None, config=None, db_url=None):
     """
     Record all files from a folder into the database.
     If a file has been copied from a previous processing step without any transformation, it will be detected and marked
@@ -51,6 +51,8 @@ def visit(folder, provenance_id, step_name, previous_step_id=None, config=list()
     :param db_url: (optional) Database URL. If not defined, it looks for an Airflow configuration file.
     :return: return processing step ID.
     """
+    config = config if config else []
+
     logging.info("Connecting to database...")
     db_conn = connection.Connection(db_url)
 
