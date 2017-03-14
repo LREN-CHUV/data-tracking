@@ -24,7 +24,7 @@ HASH_BLOCK_SIZE = 65536  # Avoid getting out of memory when hashing big files
 # PUBLIC FUNCTIONS
 ########################################################################################################################
 
-def visit(folder, provenance_id, step_name, previous_step_id=None, config=None, db_url=None):
+def visit(folder, provenance_id, step_name, previous_step_id=None, config=list(), db_url=None):
     """
     Record all files from a folder into the database.
     If a file has been copied from a previous processing step without any transformation, it will be detected and marked
@@ -35,43 +35,24 @@ def visit(folder, provenance_id, step_name, previous_step_id=None, config=None, 
     :param step_name: Name of the processing step that produced the folder to visit.
     :param previous_step_id: (optional) previous processing step ID. If not defined, we assume this is the first
     processing step.
-    :param config: Many settings. It is a dictionary that accepts the following fields:
+    :param config: List of flags:
         - boost: (optional) When enabled, we consider that all the files from a same folder share the same meta-data.
         When enabled, the processing is (about 2 times) faster. This option is enabled by default.
-        - sid_by_patient: Rarely, a data set might use study IDs which are unique by patient (not for the whole study).
-        E.g.: LREN data. In such a case, you have to enable this flag. This will use PatientID + StudyID as a session ID.
-        - pid_in_vid: Rarely, a data set might mix patient IDs and visit IDs. E.g. : LREN data. In such a case, you
-        to enable this flag. This will try to split PatientID into VisitID and PatientID.
-        - visit_in_path: Enable this flag to get the visit ID from the folder hierarchy instead of DICOM meta-data
+        - session_id_by_patient: Rarely, a data set might use study IDs which are unique by patient (not for the whole
+        study).
+        E.g.: LREN data. In such a case, you have to enable this flag. This will use PatientID + StudyID as a session
+        ID.
+        - visit_id_in_patient_id: Rarely, a data set might mix patient IDs and visit IDs. E.g. : LREN data. In such a
+        case, you have to enable this flag. This will try to split PatientID into VisitID and PatientID.
+        - visit_id_from_path: Enable this flag to get the visit ID from the folder hierarchy instead of DICOM meta-data
         (e.g. can be useful for PPMI).
-        - rep_in_path: Enable this flag to get the repetition ID from the folder hierarchy instead of DICOM meta-data
-        (e.g. can be useful for PPMI).
+        - repetition_from_path: Enable this flag to get the repetition ID from the folder hierarchy instead of DICOM
+        meta-data (e.g. can be useful for PPMI).
     :param db_url: (optional) Database URL. If not defined, it looks for an Airflow configuration file.
     :return: return processing step ID.
     """
     logging.info("Connecting to database...")
     db_conn = connection.Connection(db_url)
-
-    try:
-        boost = config['boost']
-    except (KeyError, TypeError):
-        boost = True
-    try:
-        sid_by_patient = config['sid_by_patient']
-    except (KeyError, TypeError):
-        sid_by_patient = False
-    try:
-        pid_in_vid = config['pid_in_vid']
-    except (KeyError, TypeError):
-        pid_in_vid = False
-    try:
-        visit_in_path = config['visit_in_path']
-    except (KeyError, TypeError):
-        visit_in_path = False
-    try:
-        rep_in_path = config['rep_in_path']
-    except (KeyError, TypeError):
-        rep_in_path = False
 
     step_id = _create_step(db_conn, step_name, provenance_id, previous_step_id)
 
@@ -84,15 +65,17 @@ def visit(folder, provenance_id, step_name, previous_step_id=None, config=None, 
         if "DICOM" == file_type:
             is_copy = _hash_file(file_path) in previous_files_hash
             leaf_folder = os.path.split(file_path)[0]
-            if leaf_folder not in checked or not boost:
-                ret = dicom_import.dicom2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient, pid_in_vid,
-                                            visit_in_path, rep_in_path)
+            if leaf_folder not in checked or 'boost' not in config:
+                ret = dicom_import.dicom2db(file_path, file_type, is_copy, step_id, db_conn,
+                                            'session_id_by_patient' in config, 'visit_id_in_patient_id' in config,
+                                            'visit_id_in_patient_id' in config, 'repetition_from_path' in config)
                 checked[leaf_folder] = ret['repetition_id']
             else:
                 dicom_import.extract_dicom(file_path, file_type, is_copy, checked[leaf_folder], step_id)
         elif "NIFTI" == file_type:
             is_copy = _hash_file(file_path) in previous_files_hash
-            nifti_import.nifti2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient, pid_in_vid)
+            nifti_import.nifti2db(file_path, file_type, is_copy, step_id, db_conn, 'session_id_by_patient' in config,
+                                  'visit_id_in_patient_id' in config)
         elif file_type:
             is_copy = _hash_file(file_path) in previous_files_hash
             others_import.others2db(file_path, file_type, is_copy, step_id, db_conn)

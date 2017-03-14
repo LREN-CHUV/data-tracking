@@ -9,7 +9,7 @@ with codecs.open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='mri-meta-extract',
-    version='1.4.5',
+    version='1.4.6',
     url='https://github.com/LREN-CHUV/mri-meta-extract',
     description='Extract meta-data from DICOM and NIFTI files',
     long_description=long_description,

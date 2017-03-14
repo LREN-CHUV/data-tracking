@@ -43,7 +43,7 @@ class TestFilesRecording:
 
         # Visit DICOM files
         acquisition_step_id = files_recording.visit('./data/dcm/', provenance_id, 'ACQUISITION',
-                                                    config={'sid_by_patient': True, 'pid_in_vid': True}, db_url=DB_URL)
+                                                    config=['sid_by_patient', 'pid_in_vid'], db_url=DB_URL)
         assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 4)
 
         # Create a provenance with some fake Matlab and SPM version numbers
@@ -55,7 +55,7 @@ class TestFilesRecording:
 
         # Visit NIFTI files
         files_recording.visit('./data/nii/', provenance_id, 'DICOM2NIFTI', acquisition_step_id,
-                              config={'sid_by_patient': True, 'pid_in_vid': True}, db_url=DB_URL)
+                              config=['sid_by_patient', 'pid_in_vid'], db_url=DB_URL)
         assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 7)
 
         # A few more things to check
@@ -73,7 +73,7 @@ class TestFilesRecording:
 
         # Visit DICOM files
         acquisition_step_id = files_recording.visit('./data/dcm/', provenance_id, 'ACQUISITION',
-                                                    config={'sid_by_patient': True, 'pid_in_vid': True}, db_url=DB_URL)
+                                                    config=['sid_by_patient', 'pid_in_vid'], db_url=DB_URL)
         assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 7)
 
         # Create a provenance with some fake Matlab and SPM version numbers
@@ -85,7 +85,7 @@ class TestFilesRecording:
 
         # Visit NIFTI files
         files_recording.visit('./data/nii/', provenance_id, 'DICOM2NIFTI', acquisition_step_id,
-                              config={'sid_by_patient': True, 'pid_in_vid': True}, db_url=DB_URL)
+                              config=['sid_by_patient', 'pid_in_vid'], db_url=DB_URL)
         assert_equal(self.db_conn.db_session.query(self.db_conn.DataFile).count(), 7)
 
         # A few more things to check

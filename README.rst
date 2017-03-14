@@ -51,16 +51,16 @@ Scan a folder to populate the database :
     * param step_name: Name of the processing step that produced the folder to visit.
     * param previous_step_id: (optional) previous processing step ID. If not defined, we assume this is the first
     processing step.
-    * param config: Many settings. It is a dictionary that accepts the following fields:
+    * param config: List of flags:
         - boost: (optional) When enabled, we consider that all the files from a same folder share the same meta-data.
         When enabled, the processing is (about 2 times) faster. This option is enabled by default.
-        - sid_by_patient: Rarely, a data set might use study IDs which are unique by patient (not for the whole study).
+        - session_id_by_patient: Rarely, a data set might use study IDs which are unique by patient (not for the whole study).
         E.g.: LREN data. In such a case, you have to enable this flag. This will use PatientID + StudyID as a session ID.
-        - pid_in_vid: Rarely, a data set might mix patient IDs and visit IDs. E.g. : LREN data. In such a case, you
+        - visit_id_in_patient_id: Rarely, a data set might mix patient IDs and visit IDs. E.g. : LREN data. In such a case, you have
         to enable this flag. This will try to split PatientID into VisitID and PatientID.
-        - visit_in_path: Enable this flag to get the visit ID from the folder hierarchy instead of DICOM meta-data
+        - visit_id_from_path: Enable this flag to get the visit ID from the folder hierarchy instead of DICOM meta-data
         (e.g. can be useful for PPMI).
-        - rep_in_path: Enable this flag to get the repetition ID from the folder hierarchy instead of DICOM meta-data
+        - repetition_from_path: Enable this flag to get the repetition ID from the folder hierarchy instead of DICOM meta-data
         (e.g. can be useful for PPMI).
     :param db_url: (optional) Database URL. If not defined, it looks for an Airflow configuration file.
     * return: return processing step ID.
