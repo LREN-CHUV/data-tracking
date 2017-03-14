@@ -3,9 +3,9 @@ import re
 from . import utils
 
 
-########################################################################################################################
+#######################################################################################################################
 # PUBLIC FUNCTIONS
-########################################################################################################################
+#######################################################################################################################
 
 def nifti2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=False, pid_in_vid=False):
     """
@@ -15,7 +15,8 @@ def nifti2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=Fal
     :param is_copy: Indicate if this file is a copy.
     :param step_id: Step ID.
     :param db_conn: Database connection.
-    :param sid_by_patient: Rarely, a data set might use study IDs which are unique by patient (not for the whole study).
+    :param sid_by_patient: Rarely, a data set might use study IDs which are unique by patient
+    (not for the whole study).
     E.g.: LREN data. In such a case, you have to enable this flag. This will use PatientID + StudyID as a session ID.
     :param pid_in_vid: Rarely, a data set might mix patient IDs and visit IDs. E.g. : LREN data. In such a case, you
     to enable this flag. This will try to split PatientID into VisitID and PatientID.
@@ -45,9 +46,9 @@ def nifti2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=Fal
         db_conn.db_session.commit()
 
 
-########################################################################################################################
+#######################################################################################################################
 # PRIVATE FUNCTIONS
-########################################################################################################################
+#######################################################################################################################
 
 def _extract_participant(db_conn, file_path, pid_in_vid, dataset):
     participant_name = str(re.findall('/([^/]+?)/[^/]+?/[^/]+?/[^/]+?/[^/]+?\.nii', file_path)[0])

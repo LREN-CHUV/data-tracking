@@ -2,6 +2,7 @@ import datetime
 import glob
 import logging
 import os
+from builtins import IsADirectoryError
 import hashlib
 import magic  # python-magic
 import nibabel
@@ -13,23 +14,23 @@ from . import nifti_import
 from . import others_import
 
 
-########################################################################################################################
+#######################################################################################################################
 # SETTINGS
-########################################################################################################################
+#######################################################################################################################
 
 HASH_BLOCK_SIZE = 65536  # Avoid getting out of memory when hashing big files
 
 
-########################################################################################################################
+#######################################################################################################################
 # PUBLIC FUNCTIONS
-########################################################################################################################
+#######################################################################################################################
 
 def visit(folder, provenance_id, step_name, previous_step_id=None, config=None, db_url=None):
     """
     Record all files from a folder into the database.
-    If a file has been copied from a previous processing step without any transformation, it will be detected and marked
-    in the DB. The type of file will be detected and stored in the DB (NIFTI, DICOM, ...). If a files (e.g. a DICOM
-    file) contains some meta-data, those will be stored in the DB.
+    If a file has been copied from a previous processing step without any transformation, it will be detected and
+    marked in the DB. The type of file will be detected and stored in the DB (NIFTI, DICOM, ...). If a files
+    (e.g. a DICOM file) contains some meta-data, those will be stored in the DB.
     :param folder: folder path.
     :param provenance_id: provenance label.
     :param step_name: Name of the processing step that produced the folder to visit.
@@ -152,9 +153,9 @@ def create_provenance(dataset, software_versions=None, db_url=None):
     return provenance_id
 
 
-########################################################################################################################
+#######################################################################################################################
 # PRIVATE FUNCTIONS
-########################################################################################################################
+#######################################################################################################################
 
 def _create_step(db_conn, name, provenance_id, previous_step_id=None):
     """

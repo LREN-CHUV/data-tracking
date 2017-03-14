@@ -87,7 +87,7 @@ Without Docker
 ~~~~~~~~~~~~~~
 
 -  Run a Postgres database on ``localhost:5432``.
--  Run ``nosetest unittest.py``
+-  Run ``nosetest unit_test.py``
 
 Publish on PyPi
 ---------------

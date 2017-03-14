@@ -11,7 +11,7 @@ echo "Creating deploying schemas..."
 docker run --rm -e "DB_URL=postgresql://postgres:postgres@$GATEWAY_IP:5433/postgres" hbpmip/data-catalog-setup:1.4.5 upgrade head
 
 echo "Running unit tests..."
-nosetests unittest.py
+nosetests unit_test.py
 ret=$?
 
 # Remove DB container (if not on CircleCI)

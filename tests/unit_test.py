@@ -1,9 +1,5 @@
-import sys
-import os
-
 from nose.tools import assert_equal
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from mri_meta_extract import files_recording
 from mri_meta_extract import connection
 
@@ -33,8 +29,8 @@ class TestFilesRecording:
     def test_01_visit(self):
         """
         This is a basic use case.
-        First, we want to visit a DICOM data-set after the 'ACQUISITION' process. Then, we want to visit a NIFTI data-set
-        generated from the previous DICOM files after the 'DICOM2NIFTI' process.
+        First, we want to visit a DICOM data-set after the 'ACQUISITION' process. Then, we want to visit a NIFTI
+        data-set generated from the previous DICOM files after the 'DICOM2NIFTI' process.
         """
 
         # Create a simple provenance

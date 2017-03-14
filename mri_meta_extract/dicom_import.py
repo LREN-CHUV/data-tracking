@@ -7,16 +7,16 @@ from sqlalchemy.exc import IntegrityError
 from dicom.errors import InvalidDicomError  # pydicom.errors
 
 
-########################################################################################################################
+#######################################################################################################################
 # GLOBAL VARIABLES
-########################################################################################################################
+#######################################################################################################################
 
 conn = None
 
 
-########################################################################################################################
+#######################################################################################################################
 # PUBLIC FUNCTIONS
-########################################################################################################################
+#######################################################################################################################
 
 
 def dicom2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=False, pid_in_vid=False,
@@ -28,7 +28,8 @@ def dicom2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=Fal
     :param is_copy: Indicate if this file is a copy.
     :param step_id: Step ID
     :param db_conn: Database connection.
-    :param sid_by_patient: Rarely, a data set might use study IDs which are unique by patient (not for the whole study).
+    :param sid_by_patient: Rarely, a data set might use study IDs which are unique by patient
+    (not for the whole study).
     E.g.: LREN data. In such a case, you have to enable this flag. This will use PatientID + StudyID as a session ID.
     :param pid_in_vid: Rarely, a data set might mix patient IDs and visit IDs. E.g. : LREN data. In such a case, you
     to enable this flag. This will try to split PatientID into VisitID and PatientID.
@@ -93,9 +94,9 @@ def extract_dicom(path, file_type, is_copy, repetition_id, processing_step_id):
     return df.id
 
 
-########################################################################################################################
+#######################################################################################################################
 # PRIVATE FUNCTIONS
-########################################################################################################################
+#######################################################################################################################
 
 
 def _extract_participant(dcm, dataset, pid_in_vid=False):

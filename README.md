@@ -4,7 +4,7 @@
 
 # MRI Meta-data Extractor
 
-This is a Python library providing methods to scan folders, extract meta-data from files (DICOM, NIFTI, ...) and store 
+This is a Python library providing methods to scan folders, extract meta-data from files (DICOM, NIFTI, ...) and store
 them in a database.
 
 ## Install
@@ -16,9 +16,9 @@ Run `pip install mri-meta-extract`. (Only tested with Python3)
 Import the functions you need like this : `from mri_meta_extract.files_recording import create_provenance, visit`.
 
 Create a provenance entity using :
-   
+
     create_provenance(dataset, software_versions, db_url)
-    
+
     Create (or get if already exists) a provenance entity, store it in the database and get back a provenance ID.
     * param dataset: Name of the data set.
     * param software_versions: (optional) Version of the software components used to get the data. It is a dictionary
@@ -31,11 +31,11 @@ Create a provenance entity using :
         - others
     * param db_url: (optional) Database URL. If not defined, it looks for an Airflow configuration file.
     * return: Provenance ID.
-    
+
 Scan a folder to populate the database :
 
     def visit(folder, provenance_id, step_name, previous_step_id, config, db_url)
-    
+
     Record all files from a folder into the database.
     The files are listed in the DB. If a file has been copied from previous step without any transformation, it will be
     detected and marked in the DB. The type of file will be detected and stored in the DB. If a files (e.g. a DICOM
@@ -58,7 +58,7 @@ Scan a folder to populate the database :
         (e.g. can be useful for PPMI).
     :param db_url: (optional) Database URL. If not defined, it looks for an Airflow configuration file.
     * return: return processing step ID.
-    
+
 ## Build
 
 Run `./build.sh`. (Builds for Python3)
@@ -76,7 +76,7 @@ Run `test.sh`
 ### Without Docker
 
 * Run a Postgres database on `localhost:5432`.
-* Run `nosetest unittest.py`
+* Run `nosetest unit_test.py`
 
 ## Publish on PyPi
 
