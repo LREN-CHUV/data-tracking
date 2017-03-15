@@ -1,7 +1,26 @@
 #!/usr/bin/env bash
 
+set -e
+
 # Build
 ./build.sh
+
+count=$(git status --porcelain | wc -l)
+if test $count -gt 0; then
+  git status
+  echo "Not all files have been committed in Git. Release aborted"
+  exit 1
+fi
+
+# Look for a version tag in Git. If not found, ask the user to provide one
+git describe --exact-match > /dev/null || (
+  echo "The latest commit has not been tagged with a version. Please enter the version for this release."
+  read -p "Version > " version
+  git tag -a -m "PyPi release $version" $version
+)
+
+git push
+git push --tags
 
 # Push on PyPi
 twine upload dist/*
