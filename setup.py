@@ -18,7 +18,7 @@ setup(
     license='Apache 2.0',
     packages=['mri_meta_extract'],
     extras_require={
-        'test': ['unittest'],
+        'test': ['unittest', 'nose'],
     },
-    install_requires=['airflow', 'pydicom', 'sqlalchemy', 'nose', 'python-magic', 'nibabel', 'psycopg2']
+    install_requires=['airflow', 'pydicom', 'sqlalchemy', 'python-magic', 'nibabel', 'psycopg2']
 )
