@@ -1,8 +1,3 @@
-"""
-File: unit_test.py
-Author: Mirco Nasuti
-"""
-
 from nose.tools import assert_equal
 
 from mri_meta_extract import files_recording

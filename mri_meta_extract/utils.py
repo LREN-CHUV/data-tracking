@@ -1,6 +1,5 @@
 """
 File: utils.py
-Author: Mirco Nasuti
 """
 
 import logging
