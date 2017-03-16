@@ -1,17 +1,10 @@
-"""
-File: files_recording
-"""
-
 import builtins
-import logging
-import os
 import datetime
 import glob
+import logging
+import os
 import hashlib
-
-# magic refers to the python-magic library
-import magic
-
+import magic  # python-magic
 import nibabel
 from nibabel import filebasedimages
 

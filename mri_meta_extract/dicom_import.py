@@ -1,17 +1,10 @@
-"""
-File: dicom_import.py
-"""
-
+import dicom  # pydicom
 import logging
 import re
 
-# dicom refers to the pydicom library
-import dicom
-from dicom.errors import InvalidDicomError
-
-from sqlalchemy.exc import IntegrityError
-
 from . import utils
+from sqlalchemy.exc import IntegrityError
+from dicom.errors import InvalidDicomError  # pydicom.errors
 
 
 #######################################################################################################################

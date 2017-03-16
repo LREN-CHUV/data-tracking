@@ -1,7 +1,3 @@
-"""
-File: others_import.py
-"""
-
 import logging
 
 
