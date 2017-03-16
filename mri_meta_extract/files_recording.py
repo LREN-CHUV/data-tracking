@@ -1,8 +1,8 @@
+import builtins
 import datetime
 import glob
 import logging
 import os
-from builtins import IsADirectoryError
 import hashlib
 import magic  # python-magic
 import nibabel
@@ -201,7 +201,7 @@ def _find_type(file_path):
                 logging.info("found a file of type 'data' but does not seem to be NIFTI : " + file_path)
         else:
             logging.info("found a file with unhandled type (%s) : %s" % (file_type, file_path))
-    except IsADirectoryError:
+    except builtins.IsADirectoryError:
         return None
 
     return "other"
