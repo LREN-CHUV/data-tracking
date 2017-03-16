@@ -1,5 +1,10 @@
+"""
+File: nifti_import.py
+"""
+
 import logging
 import re
+
 from . import utils
 
 
