@@ -1,10 +1,13 @@
 import builtins
-import datetime
-import glob
 import logging
 import os
+import datetime
+import glob
 import hashlib
-import magic  # python-magic
+
+# magic refers to the python-magic library
+import magic
+
 import nibabel
 from nibabel import filebasedimages
 
@@ -26,11 +29,14 @@ HASH_BLOCK_SIZE = 65536  # Avoid getting out of memory when hashing big files
 #######################################################################################################################
 
 def visit(folder, provenance_id, step_name, previous_step_id=None, config=None, db_url=None):
-    """
-    Record all files from a folder into the database.
+    """Record all files from a folder into the database.
+
+    Note:
     If a file has been copied from a previous processing step without any transformation, it will be detected and
     marked in the DB. The type of file will be detected and stored in the DB (NIFTI, DICOM, ...). If a files
     (e.g. a DICOM file) contains some meta-data, those will be stored in the DB.
+
+    Arguments:
     :param folder: folder path.
     :param provenance_id: provenance label.
     :param step_name: Name of the processing step that produced the folder to visit.
@@ -90,8 +96,9 @@ def visit(folder, provenance_id, step_name, previous_step_id=None, config=None, 
 
 
 def create_provenance(dataset, software_versions=None, db_url=None):
-    """
-    Create (or get if already exists) a provenance entity, store it in the database and get back a provenance ID.
+    """Create (or get if already exists) a provenance entity, store it in the database and get back a provenance ID.
+
+    Arguments:
     :param dataset: Name of the data set.
     :param software_versions: (optional) Version of the software components used to get the data. It is a dictionary
     that accepts the following fields:
@@ -158,14 +165,6 @@ def create_provenance(dataset, software_versions=None, db_url=None):
 #######################################################################################################################
 
 def _create_step(db_conn, name, provenance_id, previous_step_id=None):
-    """
-    Create (or get if already exists) a processing step entity, store it in the database and get back a step ID.
-    :param db_conn: Database connection.
-    :param name: Step name.
-    :param provenance_id: Provenance ID.
-    :param previous_step_id: Previous processing step ID.
-    :return: Step ID.
-    """
     step = db_conn.db_session.query(db_conn.ProcessingStep).filter_by(
         name=name, provenance_id=provenance_id, previous_step_id=previous_step_id
     ).first()
@@ -184,11 +183,6 @@ def _create_step(db_conn, name, provenance_id, previous_step_id=None):
 
 
 def _find_type(file_path):
-    """
-    Get file type.
-    :param file_path: File path
-    :return: Type (can be DICOM, NIFTI, other, ...). If file_path is not a directory, returns None.
-    """
     try:
         file_type = magic.from_file(file_path)
         if "DICOM medical imaging data" == file_type:

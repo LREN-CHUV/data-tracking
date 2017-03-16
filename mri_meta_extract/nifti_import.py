@@ -1,5 +1,6 @@
 import logging
 import re
+
 from . import utils
 
 
@@ -8,8 +9,9 @@ from . import utils
 #######################################################################################################################
 
 def nifti2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=False, pid_in_vid=False):
-    """
-    Extract some meta-data from NIFTI files (actually mostly from their paths) and stores it in a DB.
+    """Extract some meta-data from NIFTI files (actually mostly from their paths) and stores it in a DB.
+
+    Arguments:
     :param file_path: File path.
     :param file_type: File type.
     :param is_copy: Indicate if this file is a copy.

@@ -1,10 +1,13 @@
-import dicom  # pydicom
 import logging
 import re
 
-from . import utils
 from sqlalchemy.exc import IntegrityError
-from dicom.errors import InvalidDicomError  # pydicom.errors
+
+# dicom refers to pydicom library
+import dicom
+from dicom.errors import InvalidDicomError
+
+from . import utils
 
 
 #######################################################################################################################
@@ -21,8 +24,9 @@ conn = None
 
 def dicom2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=False, pid_in_vid=False,
              visit_in_path=False, rep_in_path=False):
-    """
-    Extract some meta-data from a DICOM file and store in a DB.
+    """Extract some meta-data from a DICOM file and store in a DB.
+
+    Arguments:
     :param file_path: File path.
     :param file_type: File type (should be 'DICOM').
     :param is_copy: Indicate if this file is a copy.
