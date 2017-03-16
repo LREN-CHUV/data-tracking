@@ -12,15 +12,47 @@ if test $count -gt 0; then
   exit 1
 fi
 
+select_part() {
+  local choice=$1
+  case "$choice" in
+      "Patch release")
+          bumpversion patch
+          ;;
+      "Minor release")
+          bumpversion minor
+          ;;
+      "Major release")
+          bumpversion major
+          ;;
+      *)
+          read -p "Version > " version
+          bumpversion --new_version=$version $part
+          ;;
+  esac
+}
+
 # Look for a version tag in Git. If not found, ask the user to provide one
 git describe --exact-match > /dev/null || (
-  echo "The latest commit has not been tagged with a version. Please enter the version for this release."
-  read -p "Version > " version
-  git tag -a -m "PyPi release $version" $version
+  latest_version=$(git describe --abbrev=0)
+  echo
+  echo "Current commit has not been tagged with a version. Latest known version is $latest_version."
+  PS3='What do you want to release? '
+  options=("Patch release" "Minor release" "Major release" "Release with a custom version")
+  select choice in "${options[@]}";
+  do
+    select_part "$choice"
+    break
+  done
+  new_version=$(bumpversion --dry-run --list patch | grep current_version | sed -r s,"^.*=",,)
+  # Bumpversion v0.5.3 does not support annotated tags
+  git tag -a -m "PyPi release $new_version" $new_version
 )
 
 git push
 git push --tags
+
+# Build again to update the version
+./build.sh
 
 # Push on PyPi
 twine upload dist/*
