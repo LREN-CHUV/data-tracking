@@ -1,4 +1,3 @@
-
 """
 File: connection.py
 Author: Mirco Nasuti
