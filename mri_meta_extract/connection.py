@@ -1,5 +1,6 @@
 """
 File: connection.py
+Author: Mirco Nasuti
 """
 
 from sqlalchemy import create_engine

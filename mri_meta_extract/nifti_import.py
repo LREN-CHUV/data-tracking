@@ -1,5 +1,6 @@
 """
 File: nifti_import.py
+Author: Mirco Nasuti
 """
 
 import logging

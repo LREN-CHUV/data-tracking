@@ -1,5 +1,6 @@
 """
 File: files_recording
+Author: Mirco Nasuti
 """
 
 import builtins

@@ -1,3 +1,4 @@
 """
-module: mri_meta_extract
+Module: mri_meta_extract
+Author: Mirco Nasuti
 """
