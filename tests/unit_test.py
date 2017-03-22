@@ -1,7 +1,7 @@
 from nose.tools import assert_equal
 
-from mri_meta_extract import files_recording
-from mri_meta_extract import connection
+from data_tracking import files_recording
+from data_tracking import connection
 
 
 DB_URL = 'postgresql://postgres:postgres@localhost:5433/postgres'
