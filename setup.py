@@ -27,7 +27,6 @@ setup(
         'nibabel>=2.1.0',
         'psycopg2>=2.7.1'],
     classifiers=(
-        'Environment :: Library',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
         'Operating System :: Unix',
