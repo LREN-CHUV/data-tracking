@@ -10,7 +10,7 @@ class Connection:
 
     def __init__(self, db_url=None):
         if db_url is None:
-            db_url = configuration.get('mri', 'SQL_ALCHEMY_CONN')
+            db_url = configuration.get('data-factory', 'DATA_CATALOG_SQL_ALCHEMY_CONN')
 
         self.Base = automap_base()
         self.engine = create_engine(db_url)
