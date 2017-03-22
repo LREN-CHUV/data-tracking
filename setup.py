@@ -8,16 +8,16 @@ with codecs.open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='mri-meta-extract',
+    name='data-tracking',
     version='1.4.6',
     zip_safe=False,
-    url='https://github.com/LREN-CHUV/mri-meta-extract',
+    url='https://github.com/LREN-CHUV/data-tracking',
     description='Extract meta-data from DICOM and NIFTI files',
     long_description=long_description,
     author='Mirco Nasuti',
     author_email='mirco.nasuti@chuv.ch',
     license='Apache 2.0',
-    packages=['mri_meta_extract'],
+    packages=['data-tracking'],
     keywords='mri dicom nifti',
     install_requires=[
         'airflow>=1.7.0',

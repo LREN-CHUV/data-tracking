@@ -1,4 +1,4 @@
-|License| |Codacy Badge| |CircleCI|
+|License| |Codacy Badge| |Code Health| |CircleCI| |PyPI|
 
 MRI Meta-data Extractor
 =======================
@@ -9,13 +9,13 @@ meta-data from files (DICOM, NIFTI, ...) and store them in a database.
 Install
 -------
 
-Run ``pip install mri-meta-extract``. (Only tested with Python3)
+Run ``pip install data-tracking``. (Only tested with Python3)
 
 Use
 ---
 
 Import the functions you need like this :
-``from mri_meta_extract.files_recording import create_provenance, visit``.
+``from data_tracking.files_recording import create_provenance, visit``.
 
 Create a provenance entity using :
 
@@ -107,8 +107,12 @@ NOTES
    too.
 
 .. |License| image:: https://img.shields.io/badge/license-Apache--2.0-blue.svg
-   :target: https://github.com/LREN-CHUV/mri-meta-extract/blob/master/LICENSE
+   :target: https://github.com/LREN-CHUV/data-tracking/blob/master/LICENSE
 .. |Codacy Badge| image:: https://api.codacy.com/project/badge/Grade/4547fb5d1e464e4087640e046893576a
-   :target: https://www.codacy.com/app/mirco-nasuti/mri-meta-extract?utm_source=github.com&utm_medium=referral&utm_content=LREN-CHUV/mri-meta-extract&utm_campaign=Badge_Grade
-.. |CircleCI| image:: https://circleci.com/gh/LREN-CHUV/mri-meta-extract.svg?style=svg
-   :target: https://circleci.com/gh/LREN-CHUV/mri-meta-extract
+   :target: https://www.codacy.com/app/mirco-nasuti/data-tracking?utm_source=github.com&utm_medium=referral&utm_content=LREN-CHUV/data-tracking&utm_campaign=Badge_Grade
+.. |Code Health| image:: https://landscape.io/github/LREN-CHUV/data-tracking/master/landscape.svg?style=flat
+   :target: https://landscape.io/github/LREN-CHUV/data-tracking/master
+.. |CircleCI| image:: https://circleci.com/gh/LREN-CHUV/data-tracking.svg?style=svg
+   :target: https://circleci.com/gh/LREN-CHUV/data-tracking
+.. |PyPI| image:: https://img.shields.io/pypi/v/data-tracking.svg
+   :target: https://pypi.python.org/pypi/data-tracking/
