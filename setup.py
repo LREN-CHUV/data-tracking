@@ -17,7 +17,7 @@ setup(
     author='Mirco Nasuti',
     author_email='mirco.nasuti@chuv.ch',
     license='Apache 2.0',
-    packages=['data-tracking'],
+    packages=['data_tracking'],
     keywords='mri dicom nifti',
     install_requires=[
         'airflow>=1.7.0',
