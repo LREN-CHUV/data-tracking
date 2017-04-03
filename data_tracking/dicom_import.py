@@ -150,13 +150,8 @@ def _extract_visit(dcm, dataset, participant_id, by_patient=False, pid_in_vid=Fa
     if pid_in_vid:  # If the patient ID and the visit ID are mixed into the PatientID field (e.g. LREN data)
         try:
             patient_id = dcm.PatientID
-            if pid_in_vid:
-                try:
-                    visit_name = utils.split_patient_id(patient_id)[0]
-                except TypeError:
-                    pass
-        except AttributeError:
-            logging.warning("Patient ID was not found !")
+            visit_name = utils.split_patient_id(patient_id)[0]
+        except (AttributeError, TypeError):
             visit_name = None
     if not pid_in_vid or not visit_name:  # Otherwise, we use the StudyID (also used as a session ID) (e.g. PPMI data)
         try:
@@ -164,14 +159,16 @@ def _extract_visit(dcm, dataset, participant_id, by_patient=False, pid_in_vid=Fa
             if by_patient:  # If the Study ID is given at the patient level (e.g. LREN data), here is a little trick
                 visit_name = str(dcm.PatientID) + "_" + visit_name
         except AttributeError:
-            logging.debug("Field StudyID was not found")
             visit_name = None
     try:
         scan_date = utils.format_date(dcm.AcquisitionDate)
         if not scan_date:
             raise AttributeError
     except AttributeError:
-        scan_date = utils.format_date(dcm.SeriesDate)  # If acquisition date is missing, we use the series date
+        try:
+            scan_date = utils.format_date(dcm.SeriesDate)  # If acquisition date is missing, we use the series date
+        except AttributeError:
+            scan_date = None
     try:
         participant_age = utils.format_age(dcm.PatientAge)
     except AttributeError:
