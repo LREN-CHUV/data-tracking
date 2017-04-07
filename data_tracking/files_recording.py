@@ -28,7 +28,7 @@ HASH_BLOCK_SIZE = 65536  # Avoid getting out of memory when hashing big files
 # PUBLIC FUNCTIONS
 #######################################################################################################################
 
-def visit(folder, provenance_id, step_name, previous_step_id=None, config=None, db_url=None):
+def visit(folder, provenance_id, step_name, previous_step_id=None, config=None, db_url=None, is_organised=True):
     """Record all files from a folder into the database.
 
     Note:
@@ -56,6 +56,8 @@ def visit(folder, provenance_id, step_name, previous_step_id=None, config=None, 
         - repetition_from_path: Enable this flag to get the repetition ID from the folder hierarchy instead of DICOM
         meta-data (e.g. can be useful for PPMI).
     :param db_url: (optional) Database URL. If not defined, it looks for an Airflow configuration file.
+    :param is_organised: (optional) Disable this flag when scanning a folder that has not been organised yet
+    (should only affect nifti files).
     :return: return processing step ID.
     """
     config = config if config else []
@@ -81,7 +83,7 @@ def visit(folder, provenance_id, step_name, previous_step_id=None, config=None, 
                 checked[leaf_folder] = ret['repetition_id']
             else:
                 dicom_import.extract_dicom(file_path, file_type, is_copy, checked[leaf_folder], step_id)
-        elif "NIFTI" == file_type:
+        elif "NIFTI" == file_type and is_organised:
             is_copy = _hash_file(file_path) in previous_files_hash
             nifti_import.nifti2db(file_path, file_type, is_copy, step_id, db_conn, 'session_id_by_patient' in config,
                                   'visit_id_in_patient_id' in config)

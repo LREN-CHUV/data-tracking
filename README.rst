@@ -26,7 +26,7 @@ Create a provenance entity using :
     Create (or get if already exists) a provenance entity, store it in the database and get back a provenance ID.
     * param dataset: Name of the data set.
     * param software_versions: (optional) Version of the software components used to get the data. It is a dictionary
-    that accepts the following fields:
+      that accepts the following fields:
         - matlab_version
         - spm_version
         - spm_revision
@@ -50,19 +50,21 @@ Scan a folder to populate the database :
     * param provenance_id: provenance label.
     * param step_name: Name of the processing step that produced the folder to visit.
     * param previous_step_id: (optional) previous processing step ID. If not defined, we assume this is the first
-    processing step.
+      processing step.
     * param config: List of flags:
         - boost: (optional) When enabled, we consider that all the files from a same folder share the same meta-data.
-        When enabled, the processing is (about 2 times) faster. This option is enabled by default.
+          When enabled, the processing is (about 2 times) faster. This option is enabled by default.
         - session_id_by_patient: Rarely, a data set might use study IDs which are unique by patient (not for the whole study).
-        E.g.: LREN data. In such a case, you have to enable this flag. This will use PatientID + StudyID as a session ID.
+          E.g.: LREN data. In such a case, you have to enable this flag. This will use PatientID + StudyID as a session ID.
         - visit_id_in_patient_id: Rarely, a data set might mix patient IDs and visit IDs. E.g. : LREN data. In such a case, you have
-        to enable this flag. This will try to split PatientID into VisitID and PatientID.
+          to enable this flag. This will try to split PatientID into VisitID and PatientID.
         - visit_id_from_path: Enable this flag to get the visit ID from the folder hierarchy instead of DICOM meta-data
-        (e.g. can be useful for PPMI).
+          (e.g. can be useful for PPMI).
         - repetition_from_path: Enable this flag to get the repetition ID from the folder hierarchy instead of DICOM meta-data
-        (e.g. can be useful for PPMI).
-    :param db_url: (optional) Database URL. If not defined, it looks for an Airflow configuration file.
+          (e.g. can be useful for PPMI).
+    * param db_url: (optional) Database URL. If not defined, it looks for an Airflow configuration file.
+    * param is_organised: (optional) Disable this flag when scanning a folder that has not been organised yet
+      (should only affect nifti files).
     * return: return processing step ID.
 
 Build
