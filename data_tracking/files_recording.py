@@ -62,6 +62,10 @@ def visit(folder, provenance_id, step_name, previous_step_id=None, config=None, 
     """
     config = config if config else []
 
+    logging.info("Visiting %s", folder)
+    logging.info("-> is_organised=%s", str(is_organised))
+    logging.info("-> config=%s", str(config))
+
     logging.info("Connecting to database...")
     db_conn = connection.Connection(db_url)
 
