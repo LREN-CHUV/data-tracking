@@ -29,3 +29,13 @@ def others2db(file_path, file_type, is_copy, step_id, db_conn):
         )
         db_conn.db_session.add(df)
         db_conn.db_session.commit()
+    else:
+        if file_type not in [None, '', df.file_type]:
+            df.file_type = file_type
+            db_conn.db_session.commit()
+        if is_copy not in [None, df.is_copy]:
+            df.is_copy = is_copy
+            db_conn.db_session.commit()
+        if step_id not in [None, df.processing_step_id]:
+            df.processing_step_id = step_id
+            db_conn.db_session.commit()

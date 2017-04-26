@@ -28,15 +28,14 @@ def nifti2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=Fal
 
     df = db_conn.db_session.query(db_conn.DataFile).filter_by(path=file_path).one_or_none()
 
+    dataset = db_conn.get_dataset(step_id)
+    _extract_participant(db_conn, file_path, pid_in_vid, dataset)
+    visit_id = _extract_visit(db_conn, file_path, pid_in_vid, sid_by_patient, dataset)
+    session_id = _extract_session(db_conn, file_path, visit_id)
+    sequence_id = _extract_sequence(db_conn, file_path, session_id)
+    repetition_id = _extract_repetition(db_conn, file_path, sequence_id)
+
     if not df:
-
-        dataset = db_conn.get_dataset(step_id)
-        _extract_participant(db_conn, file_path, pid_in_vid, dataset)
-        visit_id = _extract_visit(db_conn, file_path, pid_in_vid, sid_by_patient, dataset)
-        session_id = _extract_session(db_conn, file_path, visit_id)
-        sequence_id = _extract_sequence(db_conn, file_path, session_id)
-        repetition_id = _extract_repetition(db_conn, file_path, sequence_id)
-
         df = db_conn.DataFile(
             path=file_path,
             type=file_type,
@@ -46,6 +45,19 @@ def nifti2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=Fal
         )
         db_conn.db_session.add(df)
         db_conn.db_session.commit()
+    else:
+        if file_type not in [None, '', df.file_type]:
+            df.file_type = file_type
+            db_conn.db_session.commit()
+        if is_copy not in [None, df.is_copy]:
+            df.is_copy = is_copy
+            db_conn.db_session.commit()
+        if step_id not in [None, df.processing_step_id]:
+            df.processing_step_id = step_id
+            db_conn.db_session.commit()
+        if repetition_id not in [None, df.repetition_id]:
+            df.repetition_id = repetition_id
+            db_conn.db_session.commit()
 
 
 #######################################################################################################################
