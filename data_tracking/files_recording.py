@@ -1,12 +1,9 @@
 import builtins
 import logging
+import os
 import datetime
 import glob
 import hashlib
-
-from os.path import join
-from os.path import split
-from os.path import splitext
 
 # magic refers to the python-magic library
 import magic
@@ -73,12 +70,12 @@ def visit(folder, provenance_id, step_name, previous_step_id=None, config=None, 
     previous_files_hash = _get_files_hash_from_step(db_conn, previous_step_id)
 
     checked = dict()
-    for file_path in glob.iglob(join(folder, "**/*"), recursive=True):
+    for file_path in glob.iglob(os.path.join(folder, "**/*"), recursive=True):
         logging.debug("Processing '%s'" % file_path)
         file_type = _find_type(file_path)
         if "DICOM" == file_type:
             is_copy = _hash_file(file_path) in previous_files_hash
-            leaf_folder = split(file_path)[0]
+            leaf_folder = os.path.split(file_path)[0]
             if leaf_folder not in checked or 'boost' not in config:
                 ret = dicom_import.dicom2db(file_path, file_type, is_copy, step_id, db_conn,
                                             'session_id_by_patient' in config, 'visit_id_in_patient_id' in config,
@@ -86,7 +83,7 @@ def visit(folder, provenance_id, step_name, previous_step_id=None, config=None, 
                 checked[leaf_folder] = ret['repetition_id']
             else:
                 dicom_import.extract_dicom(file_path, file_type, is_copy, checked[leaf_folder], step_id)
-        elif is_organised and ("NIFTI" == file_type or ("data" == file_type and ".nii" == splitext(file_path)[1])):
+        elif "NIFTI" == file_type and is_organised:
             is_copy = _hash_file(file_path) in previous_files_hash
             nifti_import.nifti2db(file_path, file_type, is_copy, step_id, db_conn, 'session_id_by_patient' in config,
                                   'visit_id_in_patient_id' in config)
