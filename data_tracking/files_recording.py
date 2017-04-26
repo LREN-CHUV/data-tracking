@@ -210,9 +210,12 @@ def _get_files_hash_from_step(db_conn, step_id):
 
 def _hash_file(filename):
     hasher = hashlib.sha1()
-    with open(filename, 'rb') as f:
-        buf = f.read(HASH_BLOCK_SIZE)
-        while len(buf) > 0:
-            hasher.update(buf)
+    try:
+        with open(filename, 'rb') as f:
             buf = f.read(HASH_BLOCK_SIZE)
-    return hasher.hexdigest()
+            while len(buf) > 0:
+                hasher.update(buf)
+                buf = f.read(HASH_BLOCK_SIZE)
+        return hasher.hexdigest()
+    except OSError:
+        return None
