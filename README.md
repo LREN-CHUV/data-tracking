@@ -1,4 +1,4 @@
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](https://github.com/LREN-CHUV/data-tracking/blob/master/LICENSE) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/4547fb5d1e464e4087640e046893576a)](https://www.codacy.com/app/mirco-nasuti/data-tracking?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=LREN-CHUV/data-tracking&amp;utm_campaign=Badge_Grade) [![Code Health](https://landscape.io/github/LREN-CHUV/data-tracking/master/landscape.svg?style=flat)](https://landscape.io/github/LREN-CHUV/data-tracking/master) [![CircleCI](https://circleci.com/gh/LREN-CHUV/data-tracking.svg?style=svg)](https://circleci.com/gh/LREN-CHUV/data-tracking) [![PyPI](https://img.shields.io/pypi/v/data-tracking.svg)](https://pypi.python.org/pypi/data-tracking/)
+[![CHUV](https://img.shields.io/badge/CHUV-LREN-AF4C64.svg)](https://www.unil.ch/lren/en/home.html) [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](https://github.com/LREN-CHUV/data-tracking/blob/master/LICENSE) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/4547fb5d1e464e4087640e046893576a)](https://www.codacy.com/app/mirco-nasuti/data-tracking?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=LREN-CHUV/data-tracking&amp;utm_campaign=Badge_Grade) [![Code Health](https://landscape.io/github/LREN-CHUV/data-tracking/master/landscape.svg?style=flat)](https://landscape.io/github/LREN-CHUV/data-tracking/master) [![CircleCI](https://circleci.com/gh/LREN-CHUV/data-tracking.svg?style=svg)](https://circleci.com/gh/LREN-CHUV/data-tracking) [![PyPI](https://img.shields.io/pypi/v/data-tracking.svg)](https://pypi.python.org/pypi/data-tracking/)
 
 # MRI Meta-data Extractor
 
@@ -71,7 +71,7 @@ Enter the `tests` directory.
 
 ### With Docker
 
-Run `test.sh`
+Run `./test.sh`
 
 ### Without Docker
 
