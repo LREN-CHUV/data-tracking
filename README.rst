@@ -1,4 +1,4 @@
-|License| |Codacy Badge| |Code Health| |CircleCI| |PyPI|
+|CHUV| |License| |Codacy Badge| |Code Health| |CircleCI| |PyPI|
 
 MRI Meta-data Extractor
 =======================
@@ -83,7 +83,7 @@ Enter the ``tests`` directory.
 With Docker
 ~~~~~~~~~~~
 
-Run ``test.sh``
+Run ``./test.sh``
 
 Without Docker
 ~~~~~~~~~~~~~~
@@ -108,6 +108,8 @@ NOTES
    ``--recursive`` flag when cloning the project to clone the submodule
    too.
 
+.. |CHUV| image:: https://img.shields.io/badge/CHUV-LREN-AF4C64.svg
+   :target: https://www.unil.ch/lren/en/home.html
 .. |License| image:: https://img.shields.io/badge/license-Apache--2.0-blue.svg
    :target: https://github.com/LREN-CHUV/data-tracking/blob/master/LICENSE
 .. |Codacy Badge| image:: https://api.codacy.com/project/badge/Grade/4547fb5d1e464e4087640e046893576a
