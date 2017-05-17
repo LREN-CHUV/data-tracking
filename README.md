@@ -2,8 +2,7 @@
 
 # MRI Meta-data Extractor
 
-This is a Python library providing methods to scan folders, extract meta-data from files (DICOM, NIFTI, ...) and store
-them in a database.
+This is a Python library providing methods to scan folders, extract meta-data from files (DICOM, NIFTI, ...) and store them in a database.
 
 ## Install
 

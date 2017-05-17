@@ -1,0 +1,81 @@
+name: data-tracking
+description: "This library provides functions to import data into an I2B2 DB schema"
+
+long_description: |
+  This is a Python library providing methods to scan folders, extract meta-data
+  from files (DICOM, NIFTI, ...) and store them in a database.
+
+authors:
+  - author: Mirco Nasuti
+    author_email:
+      - mirco.nasuti@chuv.ch
+    organisation: LREN-CHUV
+    organisation_badge: https://img.shields.io/badge/CHUV-LREN-AF4C64.svg
+
+platform: MIP
+component:
+  mip_building_block: data-factory
+  nature: tool
+
+license:
+  name: Apache 2.0
+  badge: https://img.shields.io/badge/license-Apache--2.0-blue.svg
+  url: https://github.com/LREN-CHUV/data-tracking/blob/master/LICENSE
+
+code_repositories:
+  - name: chuv-gitlab
+    visibility: private
+    url: https://___.chuv.ch/data-factory/data-tracking/
+    git_clone: https://___.chuv.ch/data-factory/data-tracking.git
+  - name: github/LREN-CHUV
+    visibility: public
+    url: https://github.io/LREN-CHUV/data-tracking/
+    git_clone: https://github.io/LREN-CHUV/data-tracking.git
+  - name: github/HBPMedical
+    visibility: public
+    url: https://github.io/HBPMedical/data-tracking/
+    git_clone: https://github.io/HBPMedical/data-tracking.git
+
+code_quality_checks:
+  codacy:
+    badge: https://api.codacy.com/project/badge/Grade/
+    url: "https://www.codacy.com/app/hbp-mip/data-tracking?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=LREN-CHUV/data-tracking&amp;utm_campaign=Badge_Grade"
+
+testing:
+  unit_testing:
+    - sources: /tests
+    - command: /tests/tesh.sh
+
+release_management:
+  current_version: 1.5.11
+  current_code_release: https://github.com/HBPMedical/data-tracking/archive/1.5.11.zip
+  current_docker_release: docker pull hbpmip/data-tracking:1.5.11
+  release_script: 'publish.sh'
+
+continuous_integration:
+  - name: CircleCI
+    description: "Check style and execute unit tests"
+    url: https://circleci.com/gh/LREN-CHUV/data-tracking
+    badge: https://circleci.com/gh/LREN-CHUV/data-tracking.svg?style=svg
+    actions:
+      - code_style
+      - unit_tests
+
+distribution:
+  docker_hub:
+    name: hbpmip/data-tracking
+    current_tag: 1.5.11
+    url: https://hub.docker.com/r/hbpmip/data-tracking/
+    badge: https://img.shields.io/badge/docker-hbpmip%2Fdata--tracking-008bb8.svg
+    command: docker pull hbpmip/data-tracking:1.5.11
+
+planning:
+  github:
+    name: Issues on Github
+    url: https://github.com/LREN-CHUV/data-tracking/issues
+
+related_projects:
+  - name: airflow-imaging-plugins
+    mip_building_block: data-factory
+    relationship: other-depends-on
+    relationship_scope: runtime
