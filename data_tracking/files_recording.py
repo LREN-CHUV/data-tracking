@@ -1,8 +1,8 @@
 import builtins
 import logging
-import os
 import datetime
-import glob
+import fnmatch
+import os
 import hashlib
 
 # magic refers to the python-magic library
@@ -74,7 +74,11 @@ def visit(folder, provenance_id, step_name, previous_step_id=None, config=None, 
     previous_files_hash = _get_files_hash_from_step(db_conn, previous_step_id)
 
     checked = dict()
-    for file_path in glob.iglob(os.path.join(folder, "**/*"), recursive=True):
+    matches = []
+    for root, dirnames, filenames in os.walk(folder):
+        for filename in fnmatch.filter(filenames, '*'):
+            matches.append(os.path.join(root, filename))
+    for file_path in matches:
         logging.debug("Processing '%s'" % file_path)
         file_type = _find_type(file_path)
         if "DICOM" == file_type:
