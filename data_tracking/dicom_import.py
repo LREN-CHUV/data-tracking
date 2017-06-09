@@ -120,7 +120,7 @@ def _extract_participant(dcm, dataset, pid_in_vid=False):
         logging.debug("Field PatientBirthDate was not found")
         participant_birth_date = None
     try:
-        participant_gender = dcm.PatientSex
+        participant_gender = utils.format_gender(dcm.PatientSex)
     except AttributeError:
         logging.debug("Field PatientSex was not found")
         participant_gender = None
