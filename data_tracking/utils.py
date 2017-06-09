@@ -3,6 +3,16 @@ import re
 from datetime import datetime
 
 
+def format_gender(gender):
+    try:
+        gender = gender[0].upper()
+        if gender not in ['M', 'F']:
+            gender = None
+        return gender
+    except IndexError:
+        logging.warning("Cannot determine gender !")
+
+
 def format_date(date):
     try:
         return datetime(int(date[:4]), int(date[4:6]), int(date[6:8]))
