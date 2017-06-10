@@ -1,0 +1,26 @@
+FROM python:3.4-alpine
+
+RUN apk add --update --no-cache \
+      build-base \
+      postgresql-dev \
+      gcc \
+      bash \
+      libxslt \
+      libxslt-dev \
+      libxml2 \
+      libxml2-dev  \
+      linux-headers \
+      libmagic
+
+COPY tests/data/ /src/tests/data/
+COPY requirements-dev.txt README.rst setup.cfg setup.py /src/
+RUN pip install -r /src/requirements-dev.txt
+
+COPY tests/unit_test.py /src/tests/
+COPY data_tracking/ /src/data_tracking/
+
+RUN pip install -e /src/
+
+WORKDIR /src/tests/
+
+ENTRYPOINT ["/bin/sh", "-c", "nosetests", "unit_test.py"]

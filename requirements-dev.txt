@@ -1,3 +1,2 @@
 pre-commit>=0.13
-unittest
 nose

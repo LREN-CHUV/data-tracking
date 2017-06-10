@@ -1,23 +1,44 @@
 #!/usr/bin/env bash
 
-echo "Starting DB container..."
-db_docker_id=$(docker run -d -p 5433:5432 postgres)
-sleep 3  # TODO: replace this by a test
+set -e
 
-echo "Searching for gateway IP..."
-GATEWAY_IP=$(ip addr | grep docker | grep inet | grep -Eo '[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*')
+get_script_dir () {
+     SOURCE="${BASH_SOURCE[0]}"
 
-echo "Creating deploying schemas..."
-docker run --rm -e "DB_URL=postgresql://postgres:postgres@$GATEWAY_IP:5433/postgres" hbpmip/data-catalog-setup:1.4.5 upgrade head
+     while [ -h "$SOURCE" ]; do
+          DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+          SOURCE="$( readlink "$SOURCE" )"
+          [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+     done
+     cd -P "$( dirname "$SOURCE" )"
+     pwd
+}
 
-echo "Running unit tests..."
-nosetests unit_test.py
-ret=$?
+cd "$(get_script_dir)"
 
-# Remove DB container (if not on CircleCI)
-if [ -z "$CIRCLECI" ] || [ "$CIRCLECI" = false ] ; then
-    echo "Removing DB container..."
-    docker rm -f ${db_docker_id}
+if groups $USER | grep &>/dev/null '\bdocker\b'; then
+  DOCKER_COMPOSE="docker-compose"
+else
+  DOCKER_COMPOSE="sudo docker-compose"
 fi
 
-exit "$ret"
+$DOCKER_COMPOSE up -d db
+$DOCKER_COMPOSE run wait_dbs
+
+echo
+echo "Setup database"
+$DOCKER_COMPOSE run data_catalog_setup
+
+echo
+echo "Build test image for Python 3.4"
+$DOCKER_COMPOSE build python34_tests
+
+echo
+echo "Run the tests"
+$DOCKER_COMPOSE run python34_tests
+exit 1
+
+# Cleanup
+echo
+$DOCKER_COMPOSE stop
+$DOCKER_COMPOSE rm -f > /dev/null 2> /dev/null

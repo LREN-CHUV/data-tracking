@@ -44,7 +44,7 @@ code_quality_checks:
 testing:
   unit_testing:
     - sources: /tests
-    - command: /tests/tesh.sh
+    - command: /tests/test.sh
 
 release_management:
   current_version: 1.7.0

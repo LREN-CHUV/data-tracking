@@ -3,8 +3,12 @@ from nose.tools import assert_equal
 from data_tracking import files_recording
 from data_tracking import connection
 
+import os
 
-DB_URL = 'postgresql://postgres:postgres@localhost:5433/postgres'
+if 'DB_URL' in os.environ:
+    DB_URL = os.environ['DB_URL']
+else:
+    DB_URL = 'postgresql://postgres:postgres@localhost:5433/postgres'
 
 
 class TestFilesRecording:

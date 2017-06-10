@@ -1,0 +1,35 @@
+version: '2'
+
+services:
+
+  db:
+    image: "postgres:9.6.2-alpine"
+    container_name: "db"
+    restart: unless-stopped
+    environment:
+      - POSTGRES_PASSWORD=test
+
+  wait_dbs:
+    image: "waisbrot/wait"
+    links:
+      - "db:db"
+    environment:
+      - TARGETS=db:5432
+
+  data_catalog_setup:
+    image: "hbpmip/data-catalog-setup:1.5.22"
+    container_name: "data-catalog-setup"
+    command: upgrade head
+    environment:
+      - DB_URL=postgresql://postgres:test@db:5432/postgres
+    links:
+     - "db:db"
+
+  python34_tests:
+    build:
+      context: ..
+      dockerfile: tests/Dockerfile-3.4
+    environment:
+      - DB_URL=postgresql://postgres:test@db:5432/postgres
+    links:
+     - "db:db"
