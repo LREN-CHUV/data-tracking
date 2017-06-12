@@ -34,9 +34,16 @@ echo "Build test image for Python 3.4"
 $DOCKER_COMPOSE build python34_tests
 
 echo
-echo "Run the tests"
+echo "Run the tests for Python 3.4"
 $DOCKER_COMPOSE run python34_tests
-exit 1
+
+echo
+echo "Build test image for Python 3.5"
+$DOCKER_COMPOSE build python35_tests
+
+echo
+echo "Run the tests for Python 3.5"
+$DOCKER_COMPOSE run python35_tests
 
 # Cleanup
 echo
