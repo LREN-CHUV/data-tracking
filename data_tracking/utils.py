@@ -34,7 +34,7 @@ def format_age(age):
             return float(value/365)
         else:
             raise ValueError
-    except ValueError:
+    except (IndexError, ValueError):
         logging.warning("Cannot parse age from : "+str(age))
 
 
