@@ -9,7 +9,7 @@ with codecs.open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='data-tracking',
-    version='1.5.15',
+    version='1.5.14',
     zip_safe=False,
     url='https://github.com/LREN-CHUV/data-tracking',
     description='Extract meta-data from DICOM and NIFTI files',
