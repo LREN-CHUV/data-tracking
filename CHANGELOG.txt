@@ -1,5 +1,0 @@
-# Changelog
-
-## 1.7.0 - 2017-06-09
-
-* Python 3.4 compatibility
