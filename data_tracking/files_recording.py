@@ -169,7 +169,7 @@ def create_provenance(dataset, software_versions=None, db_url=None):
             dataset=dataset, matlab_version=matlab_version, spm_version=spm_version, spm_revision=spm_revision,
             fn_called=fn_called, fn_version=fn_version, others=others
         )
-        db_conn.db_session.add(provenance)
+        db_conn.db_session.merge(provenance)
         db_conn.db_session.commit()
 
     provenance_id = provenance.id
@@ -193,7 +193,7 @@ def _create_step(db_conn, name, provenance_id, previous_step_id=None):
         step = db_conn.ProcessingStep(
             name=name, provenance_id=provenance_id, previous_step_id=previous_step_id
         )
-        db_conn.db_session.add(step)
+        db_conn.db_session.merge(step)
         db_conn.db_session.commit()
 
     step.execution_date = datetime.datetime.now()

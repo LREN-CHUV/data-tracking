@@ -87,7 +87,7 @@ def extract_dicom(path, file_type, is_copy, repetition_id, processing_step_id):
             processing_step_id=processing_step_id,
             is_copy=is_copy
         )
-        conn.db_session.add(df)
+        conn.db_session.merge(df)
     else:
         df.file_type = file_type
         df.repetition_id = repetition_id
@@ -136,7 +136,7 @@ def _extract_participant(dcm, dataset, pid_in_vid=False):
             gender=participant_gender,
             birth_date=participant_birth_date,
         )
-        conn.db_session.add(participant)
+        conn.db_session.merge(participant)
     else:
         participant.gender = participant_gender
         participant.birth_date = participant_birth_date
@@ -186,7 +186,7 @@ def _extract_visit(dcm, dataset, participant_id, by_patient=False, pid_in_vid=Fa
             participant_id=participant_id,
             patient_age=participant_age
         )
-        conn.db_session.add(visit)
+        conn.db_session.merge(visit)
     else:
         visit.date = scan_date
         visit.participant_id = participant_id
@@ -211,7 +211,7 @@ def _extract_session(dcm, visit_id):
             visit_id=visit_id,
             name=session_value,
         )
-        conn.db_session.add(session)
+        conn.db_session.merge(session)
         conn.db_session.commit()
 
     return session.id
@@ -266,7 +266,7 @@ def _extract_sequence_type(dcm):
             pixel_spacing_0=fields['pixel_spacing_0'],
             pixel_spacing_1=fields['pixel_spacing_1']
         )
-        conn.db_session.add(sequence_type)
+        conn.db_session.merge(sequence_type)
         conn.db_session.commit()
 
     return sequence_type.id
@@ -395,7 +395,7 @@ def _extract_sequence(session_id, sequence_type_id):
             session_id=session_id,
             sequence_type_id=sequence_type_id,
         )
-        conn.db_session.add(sequence)
+        conn.db_session.merge(sequence)
 
     else:
         sequence.sequence_type_id = sequence_type_id
@@ -426,7 +426,7 @@ def _extract_repetition(dcm, sequence_id):
             name=repetition_name,
             date=series_date
         )
-        conn.db_session.add(repetition)
+        conn.db_session.merge(repetition)
     else:
         repetition.date = series_date
     conn.db_session.commit()
@@ -472,7 +472,7 @@ def _extract_visit_from_path(dcm, file_path, pid_in_vid, by_patient, dataset, pa
             date=scan_date,
             participant_id=participant_id,
         )
-        conn.db_session.add(visit)
+        conn.db_session.merge(visit)
     else:
         visit.date = scan_date
         visit.participant_id = participant_id
@@ -499,7 +499,7 @@ def _extract_repetition_from_path(dcm, file_path, sequence_id):
             name=repetition_name,
             date=series_date
         )
-        conn.db_session.add(repetition)
+        conn.db_session.merge(repetition)
     else:
         repetition.date = series_date
         conn.db_session.commit()
