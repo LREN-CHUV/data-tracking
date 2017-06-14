@@ -47,9 +47,9 @@ testing:
     - command: /tests/test.sh
 
 release_management:
-  current_version: 1.5.14
-  current_code_release: https://github.com/HBPMedical/data-tracking/archive/1.5.14.zip
-  current_docker_release: docker pull hbpmip/data-tracking:1.5.14
+  current_version: 1.7.0
+  current_code_release: https://github.com/HBPMedical/data-tracking/archive/1.7.0.zip
+  current_docker_release: docker pull hbpmip/data-tracking:1.7.0
   release_script: 'publish.sh'
 
 continuous_integration:
@@ -64,10 +64,10 @@ continuous_integration:
 distribution:
   docker_hub:
     name: hbpmip/data-tracking
-    current_tag: 1.5.14
+    current_tag: 1.7.0
     url: https://hub.docker.com/r/hbpmip/data-tracking/
     badge: https://img.shields.io/badge/docker-hbpmip%2Fdata--tracking-008bb8.svg
-    command: docker pull hbpmip/data-tracking:1.5.14
+    command: docker pull hbpmip/data-tracking:1.7.0
 
 planning:
   github:
