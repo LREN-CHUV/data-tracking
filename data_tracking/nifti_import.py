@@ -43,7 +43,7 @@ def nifti2db(file_path, file_type, is_copy, step_id, db_conn, sid_by_patient=Fal
             processing_step_id=step_id,
             repetition_id=repetition_id
         )
-        db_conn.db_session.add(df)
+        db_conn.db_session.merge(df)
         db_conn.db_session.commit()
     else:
         if file_type not in [None, '', df.type]:
@@ -79,7 +79,7 @@ def _extract_participant(db_conn, file_path, pid_in_vid, dataset):
         participant = db_conn.Participant(
             id=participant_id
         )
-        db_conn.db_session.add(participant)
+        db_conn.db_session.merge(participant)
     return participant_id
 
 
@@ -124,7 +124,7 @@ def _extract_visit(db_conn, file_path, pid_in_vid, by_patient, dataset):
             id=visit_id,
             participant_id=participant_id,
         )
-        db_conn.db_session.add(visit)
+        db_conn.db_session.merge(visit)
 
     return visit_id
 

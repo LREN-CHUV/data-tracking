@@ -27,7 +27,7 @@ def others2db(file_path, file_type, is_copy, step_id, db_conn):
             is_copy=is_copy,
             processing_step_id=step_id
         )
-        db_conn.db_session.add(df)
+        db_conn.db_session.merge(df)
         db_conn.db_session.commit()
     else:
         if file_type not in [None, '', df.type]:
