@@ -83,7 +83,8 @@ class TestFilesRecording:
 
         # Create a simple provenance
         provenance_id = files_recording.create_provenance('TEST_DATA', db_url=DB_URL)
-        assert_equal(self.db_conn.db_session.query(self.db_conn.Provenance).filter_by(dataset='TEST_DATA').count(), 2)
+        assert_equal(self.db_conn.db_session.query(self.db_conn.Provenance).filter_by(
+            dataset='TEST_DATA', matlab_version=None).count(), 1)
 
         # Visit DICOM files
         acquisition_step_id = files_recording.visit('./data/dcm/', provenance_id, 'ACQUISITION',
