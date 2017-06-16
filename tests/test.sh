@@ -16,7 +16,7 @@ get_script_dir () {
 
 cd "$(get_script_dir)"
 
-if groups $USER | grep &>/dev/null '\bdocker\b'; then
+if [ "$CIRCLECI" = true ] || groups $USER | grep &>/dev/null '\bdocker\b'; then
   DOCKER_COMPOSE="docker-compose"
 else
   DOCKER_COMPOSE="sudo docker-compose"
