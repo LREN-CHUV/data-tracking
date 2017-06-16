@@ -95,7 +95,7 @@ def extract_dicom(path, file_type, is_copy, repetition_id, processing_step_id):
         df.is_copy = is_copy
     conn.db_session.commit()
 
-    return df.id
+    return conn.db_session.query(conn.DataFile).filter_by(path=path).one_or_none().id
 
 
 #######################################################################################################################
@@ -142,7 +142,8 @@ def _extract_participant(dcm, dataset, pid_in_vid=False):
         participant.birth_date = participant_birth_date
     conn.db_session.commit()
 
-    return participant.id
+    return conn.db_session.query(
+        conn.Participant).filter_by(id=participant_id).one_or_none().id
 
 
 def _extract_visit(dcm, dataset, participant_id, by_patient=False, pid_in_vid=False):
@@ -193,7 +194,7 @@ def _extract_visit(dcm, dataset, participant_id, by_patient=False, pid_in_vid=Fa
         visit.patient_age = participant_age
     conn.db_session.commit()
 
-    return visit.id
+    return conn.db_session.query(conn.Visit).filter_by(id=visit_id).one_or_none().id
 
 
 def _extract_session(dcm, visit_id):
@@ -214,7 +215,8 @@ def _extract_session(dcm, visit_id):
         conn.db_session.merge(session)
         conn.db_session.commit()
 
-    return session.id
+    return conn.db_session.query(conn.Session).filter_by(
+        visit_id=visit_id, name=session_value).first().id
 
 
 def _extract_sequence_type(dcm):
@@ -269,7 +271,28 @@ def _extract_sequence_type(dcm):
         conn.db_session.merge(sequence_type)
         conn.db_session.commit()
 
-    return sequence_type.id
+    return conn.db_session.query(conn.SequenceType).filter_by(
+        name=fields['sequence_name'],
+        manufacturer=fields['manufacturer'],
+        manufacturer_model_name=fields['manufacturer_model_name'],
+        institution_name=fields['institution_name'],
+        slice_thickness=fields['slice_thickness'],
+        repetition_time=fields['repetition_time'],
+        echo_time=fields['echo_time'],
+        echo_number=fields['echo_number'],
+        number_of_phase_encoding_steps=fields['number_of_phase_encoding_steps'],
+        percent_phase_field_of_view=fields['percent_phase_field_of_view'],
+        pixel_bandwidth=fields['pixel_bandwidth'],
+        flip_angle=fields['flip_angle'],
+        rows=fields['rows'],
+        columns=fields['columns'],
+        magnetic_field_strength=fields['magnetic_field_strength'],
+        space_between_slices=fields['space_between_slices'],
+        echo_train_length=fields['echo_train_length'],
+        percent_sampling=fields['percent_sampling'],
+        pixel_spacing_0=fields['pixel_spacing_0'],
+        pixel_spacing_1=fields['pixel_spacing_1']
+    ).one_or_none().id
 
 
 def _extract_sequence_type_fields(dcm):
@@ -401,7 +424,7 @@ def _extract_sequence(session_id, sequence_type_id):
         sequence.sequence_type_id = sequence_type_id
     conn.db_session.commit()
 
-    return sequence.id
+    return conn.db_session.query(conn.Sequence).filter_by(session_id=session_id, name=name).one_or_none().id
 
 
 def _extract_repetition(dcm, sequence_id):
@@ -431,7 +454,8 @@ def _extract_repetition(dcm, sequence_id):
         repetition.date = series_date
     conn.db_session.commit()
 
-    return repetition.id
+    return conn.db_session.query(conn.Repetition).filter_by(
+        sequence_id=sequence_id, name=repetition_name).one_or_none().id
 
 
 def _extract_visit_from_path(dcm, file_path, pid_in_vid, by_patient, dataset, participant_id):
@@ -478,7 +502,7 @@ def _extract_visit_from_path(dcm, file_path, pid_in_vid, by_patient, dataset, pa
         visit.participant_id = participant_id
         conn.db_session.commit()
 
-    return visit.id
+    return conn.db_session.query(conn.Visit).filter_by(id=visit_id).one_or_none().id
 
 
 def _extract_repetition_from_path(dcm, file_path, sequence_id):
@@ -504,4 +528,5 @@ def _extract_repetition_from_path(dcm, file_path, sequence_id):
         repetition.date = series_date
         conn.db_session.commit()
 
-    return repetition.id
+    return conn.db_session.query(conn.Repetition).filter_by(
+        sequence_id=sequence_id, name=repetition_name).one_or_none().id
