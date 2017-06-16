@@ -12,7 +12,7 @@ jobs:
       - setup_remote_docker
       - checkout
       - run: |
-          apk add --no-cache bash build-base git py-pip python python-dev
+          apk add --no-cache bash build-base git py-pip python python-dev python3 python3-dev
           pip install pre-commit
       #- restore_cache:
       #    keys:
