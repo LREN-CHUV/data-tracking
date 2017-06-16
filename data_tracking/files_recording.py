@@ -19,16 +19,16 @@ from . import nifti_import
 from . import others_import
 
 
-#######################################################################################################################
+##########################################################################
 # SETTINGS
-#######################################################################################################################
+##########################################################################
 
 HASH_BLOCK_SIZE = 65536  # Avoid getting out of memory when hashing big files
 
 
-#######################################################################################################################
+##########################################################################
 # PUBLIC FUNCTIONS
-#######################################################################################################################
+##########################################################################
 
 def visit(folder, provenance_id, step_name, previous_step_id=None, config=None, db_url=None, is_organised=True):
     """Record all files from a folder into the database.
@@ -89,14 +89,16 @@ def visit(folder, provenance_id, step_name, previous_step_id=None, config=None, 
                                             'visit_id_in_patient_id' in config, 'repetition_from_path' in config)
                 checked[leaf_folder] = ret['repetition_id']
             else:
-                dicom_import.extract_dicom(file_path, file_type, is_copy, checked[leaf_folder], step_id)
+                dicom_import.extract_dicom(
+                    file_path, file_type, is_copy, checked[leaf_folder], step_id)
         elif "NIFTI" == file_type and is_organised:
             is_copy = _hash_file(file_path) in previous_files_hash
             nifti_import.nifti2db(file_path, file_type, is_copy, step_id, db_conn, 'session_id_by_patient' in config,
                                   'visit_id_in_patient_id' in config)
         elif file_type:
             is_copy = _hash_file(file_path) in previous_files_hash
-            others_import.others2db(file_path, file_type, is_copy, step_id, db_conn)
+            others_import.others2db(
+                file_path, file_type, is_copy, step_id, db_conn)
 
     if sys.version_info.major == 3 and sys.version_info.minor < 5:
         matches = []
@@ -172,6 +174,11 @@ def create_provenance(dataset, software_versions=None, db_url=None):
         db_conn.db_session.merge(provenance)
         db_conn.db_session.commit()
 
+        provenance = db_conn.db_session.query(db_conn.Provenance).filter_by(
+            dataset=dataset, matlab_version=matlab_version, spm_version=spm_version, spm_revision=spm_revision,
+            fn_called=fn_called, fn_version=fn_version, others=others
+        ).first()
+
     provenance_id = provenance.id
 
     logging.info("Closing database connection...")
@@ -180,9 +187,9 @@ def create_provenance(dataset, software_versions=None, db_url=None):
     return provenance_id
 
 
-#######################################################################################################################
+##########################################################################
 # PRIVATE FUNCTIONS
-#######################################################################################################################
+##########################################################################
 
 def _create_step(db_conn, name, provenance_id, previous_step_id=None):
     step = db_conn.db_session.query(db_conn.ProcessingStep).filter_by(
@@ -195,6 +202,10 @@ def _create_step(db_conn, name, provenance_id, previous_step_id=None):
         )
         db_conn.db_session.merge(step)
         db_conn.db_session.commit()
+
+        step = db_conn.db_session.query(db_conn.ProcessingStep).filter_by(
+            name=name, provenance_id=provenance_id, previous_step_id=previous_step_id
+        ).first()
 
     step.execution_date = datetime.datetime.now()
     db_conn.db_session.commit()
@@ -212,9 +223,11 @@ def _find_type(file_path):
                 nibabel.load(file_path)
                 return "NIFTI"
             except filebasedimages.ImageFileError:
-                logging.info("found a file of type 'data' but does not seem to be NIFTI : " + file_path)
+                logging.info(
+                    "found a file of type 'data' but does not seem to be NIFTI : " + file_path)
         else:
-            logging.info("found a file with unhandled type (%s) : %s" % (file_type, file_path))
+            logging.info("found a file with unhandled type (%s) : %s" %
+                         (file_type, file_path))
     except builtins.IsADirectoryError:
         return None
 
@@ -222,7 +235,8 @@ def _find_type(file_path):
 
 
 def _get_files_hash_from_step(db_conn, step_id):
-    files = db_conn.db_session.query(db_conn.DataFile).filter_by(processing_step_id=step_id).all()
+    files = db_conn.db_session.query(db_conn.DataFile).filter_by(
+        processing_step_id=step_id).all()
     return [_hash_file(file.path) for file in files]
 
 

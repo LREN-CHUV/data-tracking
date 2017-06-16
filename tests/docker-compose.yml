@@ -15,6 +15,7 @@ services:
       - "db:db"
     environment:
       - TARGETS=db:5432
+      - TIMEOUT=60
 
   data_catalog_setup:
     image: "hbpmip/data-catalog-setup:1.5.22"
