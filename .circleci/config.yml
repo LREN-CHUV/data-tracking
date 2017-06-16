@@ -2,12 +2,12 @@
 
 version: 2
 jobs:
-  environment:
-    CIRCLECI=true
   build:
     working_directory: ~/src
     docker:
       - image: tmaier/docker-compose:17.03
+    environment:
+       - CIRCLECI: true
     steps:
       - setup_remote_docker
       - checkout
