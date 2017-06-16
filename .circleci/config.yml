@@ -15,14 +15,14 @@ jobs:
           apk add --no-cache bash build-base git py-pip python python-dev
           pip install pre-commit
       - restore_cache:
-        keys:
-          - v1-data-tracking-{{ checksum ".pre-commit-config.yaml" }}
+          keys:
+            - v1-data-tracking-{{ checksum ".pre-commit-config.yaml" }}
       - run: |
           pre-commit install
           pre-commit run --all-files
       - save_cache:
-        key: v1-data-tracking-{{ checksum ".pre-commit-config.yaml" }}
-        paths:
-          - ~/.pre-commit
+          key: v1-data-tracking-{{ checksum ".pre-commit-config.yaml" }}
+          paths:
+            - ~/.pre-commit
       - run: ./build.sh
       - run: ./tests/test.sh
