@@ -7,10 +7,8 @@ jobs:
     docker:
       - image: tmaier/docker-compose:17.03
     steps:
+      - setup_remote_docker
       - checkout
-      - run: |
-          docker version
-          docker info
       - run: |
           apk add --no-cache bash build-base git py-pip python python-dev
           pip install pre-commit
