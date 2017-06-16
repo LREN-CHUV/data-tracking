@@ -14,7 +14,7 @@ get_script_dir () {
      pwd
 }
 
-export WORKSPACE=$(get_script_dir)
+WORKSPACE=$(get_script_dir)
 
 # Build
 echo "Build the project..."
@@ -71,8 +71,6 @@ git pull --tags
   fi
 )
 
-git push
-git push --tags
 updated_version=$(bumpversion --dry-run --list patch | grep current_version | sed -r s,"^.*=",,)
 
 # Build again to update the version
@@ -80,6 +78,9 @@ echo "Build the project for distribution..."
 ./build.sh
 ./tests/test.sh
 echo "[ok] Done"
+
+git push
+git push --tags
 
 # Push on PyPi
 echo "Publish on PyPi..."
@@ -93,5 +94,4 @@ done
 sed "s/USER/${USER^}/" $WORKSPACE/slack.json > $WORKSPACE/.slack.json
 sed -i.bak "s/VERSION/$updated_version/" $WORKSPACE/.slack.json
 curl -k -X POST --data-urlencode payload@$WORKSPACE/.slack.json https://hbps1.chuv.ch/slack/dev-activity
-rm -f $WORKSPACE/.slack.json
-rm -f $WORKSPACE/.slack.json.bak
+rm -f $WORKSPACE/.slack.json $WORKSPACE/.slack.json.bak
