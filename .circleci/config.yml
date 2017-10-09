@@ -5,26 +5,26 @@ jobs:
   build:
     working_directory: ~/src
     docker:
-      - image: tmaier/docker-compose:17.03
+      - image: hbpmip/docker-compose-for-ci:17.06-0
     environment:
        - CIRCLECI: true
     steps:
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 17.06.0-ce
       - checkout
-      - run: |
-          apk add --no-cache bash build-base git py-pip python python-dev python3 python3-dev
-          pip install pre-commit
-          python3 -m ensurepip
-          pip3 install --upgrade pip wheel
-      #- restore_cache:
-      #    keys:
-      #      - v1-data-tracking-{{ checksum ".pre-commit-config.yaml" }}
-      - run: |
-          pre-commit install
-          pre-commit run --all-files
-      #- save_cache:
-      #    key: v1-data-tracking-{{ checksum ".pre-commit-config.yaml" }}
-      #    paths:
-      #      - ~/.pre-commit
-      - run: ./build.sh
-      - run: ./tests/test.sh
+      - run:
+          name: "Install requirements"
+          command: |
+            docker --version
+            pre-commit install
+      - run:
+          name: "Validate code quality"
+          command: |
+            pre-commit run --all-files
+      - run:
+          name: "Build the project"
+          command: |
+      - run:
+          name: "Test the project"
+          command: |
+            PATH=$PATH:/$HOME/.captain/bin/ ./tests/test.sh
