@@ -22,7 +22,7 @@ setup(
     install_requires=[
         'apache-airflow==1.8.2',
         'pydicom>=0.9.9',
-        'SQLAlchemy>=1.1.6',
+        'sqlalchemy>=1.1.9',
         'python-magic>=0.4.12',
         'nibabel>=2.1.0',
         'psycopg2>=2.7.1'],
