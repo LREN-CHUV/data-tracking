@@ -25,7 +25,7 @@ setup(
         'sqlalchemy>=1.1.9',
         'python-magic>=0.4.12',
         'nibabel>=2.1.0',
-        'psycopg2>=2.7.1'],
+        'psycopg2>=2.7.3'],
     classifiers=(
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
