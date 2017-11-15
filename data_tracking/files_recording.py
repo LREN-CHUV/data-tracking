@@ -87,7 +87,11 @@ def visit(folder, provenance_id, step_name, previous_step_id=None, config=None, 
                 ret = dicom_import.dicom2db(file_path, file_type, is_copy, step_id, db_conn,
                                             'session_id_by_patient' in config, 'visit_id_in_patient_id' in config,
                                             'visit_id_in_patient_id' in config, 'repetition_from_path' in config)
-                checked[leaf_folder] = ret['repetition_id']
+                try:
+                    checked[leaf_folder] = ret['repetition_id']
+                except KeyError:
+                    # TODO: Remove it when dicom2db will be more stable
+                    logging.warning("Cannot find repetition ID !")
             else:
                 dicom_import.extract_dicom(
                     file_path, file_type, is_copy, checked[leaf_folder], step_id)
