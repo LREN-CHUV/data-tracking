@@ -88,3 +88,9 @@ NOTE : Do not forget to update the version number in the setup.py prior to publi
 ## NOTES
 
 * This project contains a reference to a Git submodule. You can use the `--recursive` flag when cloning the project to clone the submodule too.
+
+# Acknowledgements
+
+This work has been funded by the European Union Seventh Framework Program (FP7/2007­2013) under grant agreement no. 604102 (HBP)
+
+This work is part of SP8 of the Human Brain Project (SGA1).
