@@ -20,9 +20,9 @@ setup(
     packages=['data_tracking'],
     keywords='mri dicom nifti',
     install_requires=[
-        'apache-airflow==1.8.2',
+        'apache-airflow==1.9.0',
         'pydicom>=0.9.9',
-        'sqlalchemy>=1.1.9',
+        'sqlalchemy>=1.1.14',
         'python-magic>=0.4.12',
         'nibabel>=2.1.0',
         'psycopg2>=2.7.3'],
