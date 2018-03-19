@@ -22,10 +22,10 @@ setup(
     install_requires=[
         'apache-airflow==1.9.0',
         'pydicom>=0.9.9',
-        'sqlalchemy>=1.1.14',
+        'sqlalchemy==1.2.5',
         'python-magic>=0.4.12',
         'nibabel>=2.1.0',
-        'psycopg2>=2.7.3'],
+        'psycopg2-binary==2.7.4'],
     classifiers=(
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
