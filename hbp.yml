@@ -47,9 +47,9 @@ testing:
     - command: /tests/test.sh
 
 release_management:
-  current_version: 1.7.2
-  current_code_release: https://github.com/HBPMedical/data-tracking/archive/1.7.2.zip
-  current_binary_release: https://pypi.python.org/pypi/data-tracking/1.7.2
+  current_version: 1.7.3
+  current_code_release: https://github.com/HBPMedical/data-tracking/archive/1.7.3.zip
+  current_binary_release: https://pypi.python.org/pypi/data-tracking/1.7.3
   release_script: 'publish.sh'
 
 continuous_integration:
