@@ -108,6 +108,14 @@ NOTES
    ``--recursive`` flag when cloning the project to clone the submodule
    too.
 
+Acknowledgements
+================
+
+This work has been funded by the European Union Seventh Framework
+Program (FP7/2007­2013) under grant agreement no. 604102 (HBP)
+
+This work is part of SP8 of the Human Brain Project (SGA1).
+
 .. |CHUV| image:: https://img.shields.io/badge/CHUV-LREN-AF4C64.svg
    :target: https://www.unil.ch/lren/en/home.html
 .. |License| image:: https://img.shields.io/badge/license-Apache--2.0-blue.svg

@@ -21,7 +21,7 @@ setup(
     keywords='mri dicom nifti',
     install_requires=[
         'apache-airflow==1.9.0',
-        'pydicom>=0.9.9',
+        'pydicom==0.9.9',
         'sqlalchemy==1.2.5',
         'python-magic>=0.4.12',
         'nibabel>=2.1.0',
